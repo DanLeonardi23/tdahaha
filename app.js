@@ -248,6 +248,7 @@ let tasks = [
   { id: 1, text: 'Responder e-mails importantes', done: false },
   { id: 2, text: 'Tomar medicação', done: true },
 ];
+let totalDone = 1; // starts with pre-existing done task
 
 function renderTasks() {
   const list = document.getElementById('tasks-list');
@@ -258,12 +259,15 @@ function renderTasks() {
       <button class="task-del" onclick="deleteTask(${t.id})">✕</button>
     </div>
   `).join('');
-  document.getElementById('stat-tasks').textContent = tasks.filter(t => t.done).length;
+  document.getElementById('stat-tasks').textContent = totalDone;
 }
 
 function toggleTask(id) {
   const t = tasks.find(t => t.id === id);
-  if (t) t.done = !t.done;
+  if (!t) return;
+  const wasDone = t.done;
+  t.done = !t.done;
+  if (!wasDone && t.done) totalDone++;
   renderTasks();
 }
 
@@ -278,6 +282,11 @@ function addTask() {
   if (!text) return;
   tasks.push({ id: Date.now(), text, done: false });
   input.value = '';
+  renderTasks();
+}
+
+function clearDoneTasks() {
+  tasks = tasks.filter(t => !t.done);
   renderTasks();
 }
 

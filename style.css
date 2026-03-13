@@ -257,6 +257,30 @@ body {
   line-height: 1;
 }
 
+.tasks-clear-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 7px;
+  border: 2px dashed #D6F0FF;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.tasks-clear-btn:hover {
+  background: #FFF0F0;
+  border-color: var(--c1);
+  color: var(--c1);
+}
+
 .task-item {
   display: flex;
   align-items: center;
