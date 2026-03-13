@@ -272,19 +272,12 @@ function deleteTask(id) {
   renderTasks();
 }
 
-function showTaskInput() {
-  const row = document.getElementById('task-input-row');
-  row.style.display = row.style.display === 'none' ? 'flex' : 'none';
-  if (row.style.display !== 'none') document.getElementById('task-input').focus();
-}
-
 function addTask() {
   const input = document.getElementById('task-input');
   const text = input.value.trim();
   if (!text) return;
   tasks.push({ id: Date.now(), text, done: false });
   input.value = '';
-  document.getElementById('task-input-row').style.display = 'none';
   renderTasks();
 }
 

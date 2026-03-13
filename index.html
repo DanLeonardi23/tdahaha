@@ -64,12 +64,15 @@
         <div class="card tasks-card">
           <div class="tasks-header">
             <span class="card-title">Tarefas</span>
-            <button class="add-btn" onclick="showTaskInput()" title="Adicionar tarefa">+</button>
+          </div>
+          <div class="task-input-row">
+            <input class="task-input" id="task-input" placeholder="Nova tarefa..." onkeydown="if(event.key==='Enter')addTask()" />
+            <button class="task-add-confirm" onclick="addTask()">+</button>
           </div>
           <div class="tasks-list" id="tasks-list"></div>
-          <div class="task-input-row" id="task-input-row" style="display:none;">
-            <input class="task-input" id="task-input" placeholder="Nova tarefa..." onkeydown="if(event.key==='Enter')addTask()" />
-            <button class="task-add-confirm" onclick="addTask()">OK</button>
+          <div class="tasks-done-bar">
+            <span class="tasks-done-label">Concluídas hoje</span>
+            <span class="tasks-done-count" id="stat-tasks">0</span>
           </div>
         </div>
       </div>
@@ -111,10 +114,6 @@
         <div class="card stats-card">
           <div class="card-title">Hoje</div>
           <div class="stats-grid">
-            <div class="stat-box stat-yellow">
-              <div class="stat-number" id="stat-tasks">0</div>
-              <div class="stat-label">Concluídas</div>
-            </div>
             <div class="stat-box stat-green">
               <div class="stat-number green" id="stat-reminders">0</div>
               <div class="stat-label">Lembretes</div>
