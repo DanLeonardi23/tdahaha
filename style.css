@@ -6,22 +6,22 @@
 }
 
 :root {
-  --c1: #FF6B6B;
-  --c2: #FFD93D;
-  --c3: #6BCB77;
-  --c4: #4D96FF;
-  --c5: #C77DFF;
-  --bg: #F7F5FF;
-  --card: #FFFFFF;
-  --text: #2D2B55;
-  --muted: #8884A8;
+  --c1: #ff6b6b;
+  --c2: #ffd93d;
+  --c3: #6bcb77;
+  --c4: #4d96ff;
+  --c5: #c77dff;
+  --bg: #f7f5ff;
+  --card: #ffffff;
+  --text: #2d2b55;
+  --muted: #8884a8;
   --radius: 16px;
   --radius-sm: 10px;
 }
 
 /* ===== BASE ===== */
 body {
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -42,12 +42,12 @@ body {
   padding: 0 20px;
   height: 58px;
   background: var(--card);
-  border-bottom: 2px solid #EEEAF8;
+  border-bottom: 2px solid #eeeaf8;
   flex-shrink: 0;
 }
 
 .nav-logo {
-  font-family: 'Fredoka One', sans-serif;
+  font-family: "Fredoka One", sans-serif;
   font-size: 22px;
   color: var(--c5);
   letter-spacing: 1px;
@@ -67,7 +67,7 @@ body {
   border-radius: 20px;
   font-size: 13px;
   font-weight: 700;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
@@ -76,7 +76,7 @@ body {
 }
 
 .nav-tab:hover {
-  background: #F0ECFF;
+  background: #f0ecff;
   color: var(--c5);
 }
 
@@ -131,7 +131,7 @@ body {
   background: var(--card);
   border-radius: var(--radius);
   padding: 16px;
-  border: 2px solid #EEEAF8;
+  border: 2px solid #eeeaf8;
 }
 
 .card-title {
@@ -145,11 +145,11 @@ body {
 
 /* ===== TIMER ===== */
 .timer-card {
-  border-color: #FFD6D6;
+  border-color: #ffd6d6;
 }
 
 .timer-display {
-  font-family: 'Fredoka One', sans-serif;
+  font-family: "Fredoka One", sans-serif;
   font-size: 52px;
   text-align: center;
   color: var(--c1);
@@ -168,7 +168,7 @@ body {
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   font-size: 14px;
   transition: all 0.15s;
@@ -180,17 +180,17 @@ body {
 }
 
 .timer-btn.start:hover {
-  background: #FF5252;
+  background: #ff5252;
   transform: scale(1.02);
 }
 
 .timer-btn.reset {
-  background: #FFE8E8;
+  background: #ffe8e8;
   color: var(--c1);
 }
 
 .timer-btn.reset:hover {
-  background: #FFCDD2;
+  background: #ffcdd2;
 }
 
 .timer-label {
@@ -203,7 +203,7 @@ body {
 
 /* ===== TASKS ===== */
 .tasks-card {
-  border-color: #D6F0FF;
+  border-color: #d6f0ff;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -241,7 +241,7 @@ body {
 
 .add-btn:hover {
   transform: scale(1.1);
-  background: #3080FF;
+  background: #3080ff;
 }
 
 .tasks-list {
@@ -260,7 +260,7 @@ body {
 }
 
 .task-item:hover {
-  background: #F0F8FF;
+  background: #f0f8ff;
 }
 
 .task-check {
@@ -323,10 +323,10 @@ body {
 
 .task-input {
   flex: 1;
-  border: 2px solid #D6F0FF;
+  border: 2px solid #d6f0ff;
   border-radius: 8px;
   padding: 7px 10px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-size: 13px;
   color: var(--text);
   outline: none;
@@ -342,7 +342,7 @@ body {
   border-radius: 8px;
   color: white;
   padding: 7px 12px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 13px;
@@ -350,7 +350,7 @@ body {
 
 /* ===== CALENDAR ===== */
 .calendar-card {
-  border-color: #E8D6FF;
+  border-color: #e8d6ff;
   display: flex;
   flex-direction: column;
 }
@@ -363,14 +363,14 @@ body {
 }
 
 .cal-month {
-  font-family: 'Fredoka One', sans-serif;
+  font-family: "Fredoka One", sans-serif;
   font-size: 18px;
   color: var(--c5);
 }
 
 .cal-nav {
   background: none;
-  border: 2px solid #E8D6FF;
+  border: 2px solid #e8d6ff;
   border-radius: 8px;
   width: 28px;
   height: 28px;
@@ -414,7 +414,7 @@ body {
 }
 
 .cal-day:hover {
-  background: #F0ECFF;
+  background: #f0ecff;
 }
 
 .cal-day.today {
@@ -423,15 +423,15 @@ body {
 }
 
 .cal-day.selected:not(.today) {
-  background: #F0ECFF;
+  background: #f0ecff;
 }
 
 .cal-day.other-month {
-  color: #C8C4E0;
+  color: #c8c4e0;
 }
 
 .cal-day.has-event::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 2px;
   left: 50%;
@@ -448,7 +448,7 @@ body {
 
 .cal-event-area {
   margin-top: 12px;
-  border-top: 2px solid #EEEAF8;
+  border-top: 2px solid #eeeaf8;
   padding-top: 10px;
   flex: 1;
 }
@@ -486,10 +486,10 @@ body {
 
 .cal-event-input {
   flex: 1;
-  border: 2px solid #E8D6FF;
+  border: 2px solid #e8d6ff;
   border-radius: 8px;
   padding: 6px 8px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-size: 12px;
   color: var(--text);
   outline: none;
@@ -505,7 +505,7 @@ body {
   border-radius: 8px;
   color: white;
   padding: 6px 10px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 12px;
@@ -513,7 +513,7 @@ body {
 
 /* ===== REMINDERS ===== */
 .reminders-card {
-  border-color: #D6FFE8;
+  border-color: #d6ffe8;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -536,7 +536,7 @@ body {
 }
 
 .reminder-item:hover {
-  background: #F0FFF5;
+  background: #f0fff5;
 }
 
 .reminder-icon {
@@ -594,10 +594,10 @@ body {
 
 .reminder-input {
   flex: 1;
-  border: 2px solid #D6FFE8;
+  border: 2px solid #d6ffe8;
   border-radius: 8px;
   padding: 6px 9px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-size: 12px;
   color: var(--text);
   outline: none;
@@ -611,10 +611,10 @@ body {
 .reminder-time-input {
   width: 85px;
   flex-shrink: 0;
-  border: 2px solid #D6FFE8;
+  border: 2px solid #d6ffe8;
   border-radius: 8px;
   padding: 6px 6px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-size: 12px;
   color: var(--text);
   outline: none;
@@ -626,7 +626,7 @@ body {
   border-radius: 8px;
   color: white;
   padding: 7px 12px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 12px;
@@ -635,7 +635,7 @@ body {
 
 /* ===== STATS ===== */
 .stats-card {
-  border-color: #FFF3D6;
+  border-color: #fff3d6;
 }
 
 .stats-grid {
@@ -651,16 +651,16 @@ body {
 }
 
 .stat-yellow {
-  background: #FFF8E8;
+  background: #fff8e8;
 }
 
 .stat-green {
-  background: #F0FFF5;
+  background: #f0fff5;
 }
 
 .stat-number {
   font-size: 22px;
-  font-family: 'Fredoka One', sans-serif;
+  font-family: "Fredoka One", sans-serif;
   color: var(--c2);
 }
 
@@ -694,7 +694,7 @@ body {
 }
 
 .notes-page-title {
-  font-family: 'Fredoka One', sans-serif;
+  font-family: "Fredoka One", sans-serif;
   font-size: 20px;
   color: var(--c3);
 }
@@ -717,7 +717,7 @@ body {
 
 .note-card-mini {
   background: var(--card);
-  border: 2px solid #EEEAF8;
+  border: 2px solid #eeeaf8;
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   cursor: pointer;
@@ -730,7 +730,7 @@ body {
 
 .note-card-mini.active {
   border-color: var(--c3);
-  background: #F0FFF5;
+  background: #f0fff5;
 }
 
 .note-mini-title {
@@ -764,7 +764,7 @@ body {
   border-radius: var(--radius-sm);
   color: white;
   padding: 9px 16px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 13px;
@@ -772,14 +772,14 @@ body {
 }
 
 .new-note-btn:hover {
-  background: #55BB60;
+  background: #55bb60;
   transform: scale(1.02);
 }
 
 .note-editor {
   flex: 1;
   background: var(--card);
-  border: 2px solid #D6FFE8;
+  border: 2px solid #d6ffe8;
   border-radius: var(--radius);
   padding: 16px;
   display: flex;
@@ -810,23 +810,23 @@ body {
 .note-title-input {
   border: none;
   outline: none;
-  font-family: 'Fredoka One', sans-serif;
+  font-family: "Fredoka One", sans-serif;
   font-size: 22px;
   color: var(--text);
   background: transparent;
   width: 100%;
-  border-bottom: 2px solid #EEEAF8;
+  border-bottom: 2px solid #eeeaf8;
   padding-bottom: 8px;
 }
 
 .note-title-input::placeholder {
-  color: #C8C4E0;
+  color: #c8c4e0;
 }
 
 .note-content-input {
   border: none;
   outline: none;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-size: 14px;
   color: var(--text);
   background: transparent;
@@ -837,7 +837,7 @@ body {
 }
 
 .note-content-input::placeholder {
-  color: #C8C4E0;
+  color: #c8c4e0;
 }
 
 .note-footer {
@@ -846,7 +846,7 @@ body {
   justify-content: space-between;
   flex-shrink: 0;
   padding-top: 8px;
-  border-top: 2px solid #EEEAF8;
+  border-top: 2px solid #eeeaf8;
 }
 
 .note-actions {
@@ -866,7 +866,7 @@ body {
   border-radius: 8px;
   color: white;
   padding: 8px 20px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 13px;
@@ -874,23 +874,23 @@ body {
 }
 
 .note-save-btn:hover {
-  background: #55BB60;
+  background: #55bb60;
 }
 
 .note-del-btn {
-  background: #FFF0F0;
+  background: #fff0f0;
   border: none;
   border-radius: 8px;
   color: var(--c1);
   padding: 8px 14px;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 13px;
 }
 
 .note-del-btn:hover {
-  background: #FFCDD2;
+  background: #ffcdd2;
 }
 
 /* ===== SCROLLBAR ===== */
@@ -904,6 +904,6 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D4CEFF;
+  background: #d4ceff;
   border-radius: 4px;
 }
