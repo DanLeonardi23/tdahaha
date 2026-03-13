@@ -86,13 +86,28 @@
           <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
+
         <div class="cal-event-area">
-          <div class="cal-event-title" id="cal-day-label">Eventos</div>
-          <div id="cal-events-list"></div>
-          <div class="cal-add-event">
-            <input class="cal-event-input" id="cal-event-input" placeholder="Adicionar evento..." onkeydown="if(event.key==='Enter')addCalEvent()" />
-            <button class="cal-event-btn" onclick="addCalEvent()">+</button>
+          <!-- Fixed input block -->
+          <div class="cal-add-block">
+            <div class="cal-day-label-row">
+              <div class="cal-event-title" id="cal-day-label">Eventos</div>
+            </div>
+            <input class="cal-event-input" id="cal-event-input" placeholder="Título do evento..." />
+            <div class="cal-event-meta">
+              <input class="cal-event-time" id="cal-event-time" type="time" />
+              <div class="cal-relevance-group">
+                <button class="rel-btn rel-green active" id="rel-green" onclick="setRelevance('green')" title="Baixa"></button>
+                <button class="rel-btn rel-yellow" id="rel-yellow" onclick="setRelevance('yellow')" title="Média"></button>
+                <button class="rel-btn rel-red" id="rel-red" onclick="setRelevance('red')" title="Alta"></button>
+              </div>
+              <button class="cal-event-btn" onclick="addCalEvent()">+</button>
+            </div>
+            <textarea class="cal-event-obs" id="cal-event-obs" placeholder="Observações (opcional)..." rows="2"></textarea>
           </div>
+
+          <!-- Scrollable events list below -->
+          <div class="cal-events-list" id="cal-events-list"></div>
         </div>
       </div>
 

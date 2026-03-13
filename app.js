@@ -296,16 +296,23 @@ renderTasks();
 let calDate = new Date();
 calDate.setDate(1);
 let selectedDay = new Date().getDate();
-
 let calEvents = {};
+let currentRelevance = 'green';
 
 const months = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
 ];
 const dows = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const eventColors = ['#C77DFF','#4D96FF','#FF6B6B','#6BCB77','#FFD93D'];
-let colorIdx = 0;
+
+const relevanceColor = { green: '#6BCB77', yellow: '#FFD93D', red: '#FF6B6B' };
+
+function setRelevance(rel) {
+  currentRelevance = rel;
+  ['green','yellow','red'].forEach(r => {
+    document.getElementById('rel-' + r).classList.toggle('active', r === rel);
+  });
+}
 
 function renderCalendar() {
   const y = calDate.getFullYear();
@@ -318,26 +325,32 @@ function renderCalendar() {
   const first = new Date(y, m, 1).getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
   const today = new Date();
-
-  // Previous month padding
   const prevDays = new Date(y, m, 0).getDate();
+
   for (let i = 0; i < first; i++) {
     grid.innerHTML += `<div class="cal-day other-month">${prevDays - first + i + 1}</div>`;
   }
 
-  // Current month days
   for (let d = 1; d <= daysInMonth; d++) {
     const key = y + '-' + (m + 1) + '-' + d;
     const isToday = today.getDate() === d && today.getMonth() === m && today.getFullYear() === y;
     const isSel = selectedDay === d;
-    const hasEv = !!calEvents[key] && calEvents[key].length > 0;
+    const evs = calEvents[key] || [];
 
     let classes = 'cal-day';
     if (isToday) classes += ' today';
     if (isSel && !isToday) classes += ' selected';
-    if (hasEv) classes += ' has-event';
 
-    grid.innerHTML += `<div class="${classes}" onclick="selectDay(${d})">${d}</div>`;
+    // Build colored dots (max 3) from event relevance
+    let dots = '';
+    if (evs.length > 0) {
+      const shown = evs.slice(0, 3);
+      dots = '<div class="cal-dots">' +
+        shown.map(e => `<div class="cal-dot" style="background:${relevanceColor[e.relevance] || '#ccc'}"></div>`).join('') +
+        '</div>';
+    }
+
+    grid.innerHTML += `<div class="${classes}" onclick="selectDay(${d})">${d}${dots}</div>`;
   }
 
   renderCalEvents();
@@ -357,29 +370,45 @@ function renderCalEvents() {
   const y = calDate.getFullYear();
   const m = calDate.getMonth() + 1;
   const key = y + '-' + m + '-' + selectedDay;
-  document.getElementById('cal-day-label').textContent = 'Dia ' + selectedDay + ' — Eventos';
+  document.getElementById('cal-day-label').textContent = 'Dia ' + selectedDay + ' — ' + months[calDate.getMonth()];
   const list = document.getElementById('cal-events-list');
   const evs = calEvents[key] || [];
-  list.innerHTML = evs.length
-    ? evs.map(e => `
-        <div class="cal-event-item">
-          <div class="cal-event-dot" style="background:${e.color}"></div>
-          <span>${e.text}</span>
-        </div>
-      `).join('')
-    : '<div style="font-size:12px;color:var(--muted);font-weight:600;">Nenhum evento</div>';
+
+  if (!evs.length) {
+    list.innerHTML = '<div class="cal-empty">Nenhum evento neste dia</div>';
+    return;
+  }
+
+  list.innerHTML = evs.map((e, i) => `
+    <div class="cal-event-item rel-${e.relevance}">
+      <div class="cal-event-body">
+        <div class="cal-event-name">${e.text}</div>
+        ${e.time ? `<div class="cal-event-time-tag">⏰ ${e.time}</div>` : ''}
+        ${e.obs ? `<div class="cal-event-obs-text">${e.obs}</div>` : ''}
+      </div>
+      <button class="cal-event-del" onclick="deleteCalEvent('${key}',${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function deleteCalEvent(key, idx) {
+  calEvents[key].splice(idx, 1);
+  renderCalendar();
 }
 
 function addCalEvent() {
-  const input = document.getElementById('cal-event-input');
-  const text = input.value.trim();
+  const text = document.getElementById('cal-event-input').value.trim();
   if (!text) return;
+  const time = document.getElementById('cal-event-time').value;
+  const obs  = document.getElementById('cal-event-obs').value.trim();
   const y = calDate.getFullYear();
   const m = calDate.getMonth() + 1;
   const key = y + '-' + m + '-' + selectedDay;
   if (!calEvents[key]) calEvents[key] = [];
-  calEvents[key].push({ text, color: eventColors[colorIdx++ % eventColors.length] });
-  input.value = '';
+  calEvents[key].push({ text, time, obs, relevance: currentRelevance });
+  document.getElementById('cal-event-input').value = '';
+  document.getElementById('cal-event-time').value = '';
+  document.getElementById('cal-event-obs').value = '';
   renderCalendar();
 }
 
