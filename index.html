@@ -41,11 +41,15 @@
             <button class="preset-btn" onclick="applyPreset(45)">45 min</button>
           </div>
           <div class="timer-set-row">
-            <input class="timer-set-input" id="timer-set-input" type="text" placeholder="mm:ss" maxlength="5"
-              onblur="setTimerFromInput()" onkeydown="if(event.key==='Enter')setTimerFromInput()" />
+            <input class="timer-set-input" id="timer-set-input" type="text"
+              value="00:00:00" maxlength="8" inputmode="numeric"
+              onkeydown="timerInputKeydown(event)"
+              onkeyup="timerInputKeyup(event)"
+              onfocus="timerInputFocus()"
+              onpaste="return false;" />
             <button class="timer-set-btn" onclick="setTimerFromInput()">Definir</button>
           </div>
-          <div class="timer-display" id="timer-display">00:00</div>
+          <div class="timer-display" id="timer-display">00:00:00</div>
           <div class="timer-progress-track">
             <div class="timer-progress" id="timer-progress"></div>
           </div>

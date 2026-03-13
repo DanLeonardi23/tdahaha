@@ -150,11 +150,12 @@ body {
 
 .timer-display {
   font-family: 'Fredoka One', sans-serif;
-  font-size: 52px;
+  font-size: 42px;
   text-align: center;
   color: var(--c1);
   line-height: 1;
   margin: 8px 0 12px;
+  letter-spacing: 2px;
 }
 
 .timer-btns {

@@ -25,6 +25,68 @@ let timerMuted = false;
 let audioCtx = null;
 let activeAlarmNodes = [];
 
+// --- Masked input hh:mm:ss ---
+// Stores only the 6 digits (no colons): [h,h,m,m,s,s]
+let timerDigits = [0,0,0,0,0,0];
+
+function renderTimerInput() {
+  const d = timerDigits;
+  document.getElementById('timer-set-input').value =
+    d[0]+''+d[1]+':'+d[2]+''+d[3]+':'+d[4]+''+d[5];
+}
+
+function timerInputFocus() {
+  // move cursor to end
+  const el = document.getElementById('timer-set-input');
+  setTimeout(() => { el.selectionStart = el.selectionEnd = el.value.length; }, 0);
+}
+
+function timerInputKeydown(e) {
+  if (e.key === 'Enter') { setTimerFromInput(); return; }
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    // shift digits right (clear last digit)
+    timerDigits = [0, ...timerDigits.slice(0, 5)];
+    renderTimerInput();
+    return;
+  }
+  if (e.key === 'Delete') {
+    e.preventDefault();
+    timerDigits = [0,0,0,0,0,0];
+    renderTimerInput();
+    return;
+  }
+  // block non-numeric, allow tab/arrows
+  if (!/^\d$/.test(e.key) && !['Tab','ArrowLeft','ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+  }
+}
+
+function timerInputKeyup(e) {
+  if (!/^\d$/.test(e.key)) return;
+  e.preventDefault();
+  // shift digits left and append new digit
+  timerDigits = [...timerDigits.slice(1), parseInt(e.key)];
+  renderTimerInput();
+}
+
+function setTimerFromInput() {
+  const h = timerDigits[0]*10 + timerDigits[1];
+  const m = timerDigits[2]*10 + timerDigits[3];
+  const s = timerDigits[4]*10 + timerDigits[5];
+  timerTotal = h * 3600 + m * 60 + s;
+  timerSeconds = timerTotal;
+  updateTimerDisplay();
+  document.getElementById('timer-label').textContent = timerTotal > 0 ? 'Pronto — clique em Iniciar' : 'Digite um tempo válido';
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timer-start-btn').textContent = 'Iniciar';
+  }
+}
+
+// --- Audio ---
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
@@ -36,14 +98,11 @@ function playTickSound() {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 880;
-    osc.type = 'sine';
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880; osc.type = 'sine';
     gain.gain.setValueAtTime(0.06, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.08);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.08);
   } catch(e) {}
 }
 
@@ -53,14 +112,11 @@ function playUrgentTick() {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 1200;
-    osc.type = 'square';
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 1200; osc.type = 'square';
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.1);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.1);
   } catch(e) {}
 }
 
@@ -69,21 +125,17 @@ function playAlarmSound() {
   try {
     const ctx = getAudioCtx();
     stopAlarm();
-    const pattern = [900, 700, 900, 700, 900];
-    pattern.forEach((freq, i) => {
+    [900,700,900,700,900].forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sawtooth';
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq; osc.type = 'sawtooth';
       const t = ctx.currentTime + i * 0.35;
       gain.gain.setValueAtTime(0, t);
       gain.gain.linearRampToValueAtTime(0.25, t + 0.05);
       gain.gain.linearRampToValueAtTime(0.2, t + 0.25);
       gain.gain.linearRampToValueAtTime(0, t + 0.32);
-      osc.start(t);
-      osc.stop(t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
       activeAlarmNodes.push(osc);
     });
   } catch(e) {}
@@ -98,47 +150,37 @@ function toggleMute() {
   timerMuted = !timerMuted;
   document.getElementById('mute-icon-on').style.display = timerMuted ? 'none' : 'block';
   document.getElementById('mute-icon-off').style.display = timerMuted ? 'block' : 'none';
-  const btn = document.getElementById('mute-btn');
-  btn.classList.toggle('muted', timerMuted);
+  document.getElementById('mute-btn').classList.toggle('muted', timerMuted);
   if (timerMuted) stopAlarm();
 }
 
 function applyPreset(mins) {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  document.getElementById('timer-start-btn').textContent = 'Iniciar';
   timerTotal = mins * 60;
   timerSeconds = timerTotal;
-  document.getElementById('timer-set-input').value = mins + ':00';
+  // update masked input display
+  const hh = Math.floor(mins / 60);
+  const mm = mins % 60;
+  timerDigits = [
+    Math.floor(hh/10), hh%10,
+    Math.floor(mm/10), mm%10,
+    0, 0
+  ];
+  renderTimerInput();
   updateTimerDisplay();
   document.getElementById('timer-label').textContent = 'Pronto — clique em Iniciar';
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
-  if (timerRunning) {
-    clearInterval(timerInterval);
-    timerRunning = false;
-    document.getElementById('timer-start-btn').textContent = 'Iniciar';
-  }
-}
-
-function setTimerFromInput() {
-  const raw = document.getElementById('timer-set-input').value;
-  const parts = raw.split(':');
-  let mins = 0, secs = 0;
-  if (parts.length === 2) {
-    mins = parseInt(parts[0]) || 0;
-    secs = parseInt(parts[1]) || 0;
-  } else {
-    mins = parseInt(raw) || 0;
-  }
-  timerTotal = mins * 60 + secs;
-  timerSeconds = timerTotal;
-  updateTimerDisplay();
-  document.getElementById('timer-label').textContent = 'Pronto — clique em Iniciar';
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
 }
 
 function updateTimerDisplay() {
-  const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
-  const s = (timerSeconds % 60).toString().padStart(2, '0');
-  document.getElementById('timer-display').textContent = m + ':' + s;
+  const h = Math.floor(timerSeconds / 3600);
+  const m = Math.floor((timerSeconds % 3600) / 60);
+  const s = timerSeconds % 60;
+  const display = h.toString().padStart(2,'0')+':'+m.toString().padStart(2,'0')+':'+s.toString().padStart(2,'0');
+  document.getElementById('timer-display').textContent = display;
   const pct = timerTotal > 0 ? (timerSeconds / timerTotal) * 100 : 0;
   document.getElementById('timer-progress').style.width = pct + '%';
   const color = pct > 50 ? '#6BCB77' : pct > 20 ? '#FFD93D' : '#FF6B6B';
@@ -160,11 +202,8 @@ function toggleTimer() {
     timerInterval = setInterval(() => {
       timerSeconds--;
       updateTimerDisplay();
-      if (timerSeconds <= 10 && timerSeconds > 0) {
-        playUrgentTick();
-      } else if (timerSeconds > 10) {
-        if (timerSeconds % 60 === 0) playTickSound();
-      }
+      if (timerSeconds <= 10 && timerSeconds > 0) playUrgentTick();
+      else if (timerSeconds > 10 && timerSeconds % 60 === 0) playTickSound();
       if (timerSeconds <= 0) {
         clearInterval(timerInterval);
         timerRunning = false;
@@ -181,16 +220,21 @@ function resetTimer() {
   clearInterval(timerInterval);
   stopAlarm();
   timerRunning = false;
-  timerSeconds = timerTotal;
-  updateTimerDisplay();
+  // reset to 00:00:00
+  timerTotal = 0;
+  timerSeconds = 0;
+  timerDigits = [0,0,0,0,0,0];
+  renderTimerInput();
+  document.getElementById('timer-display').textContent = '00:00:00';
+  document.getElementById('timer-progress').style.width = '0%';
   document.getElementById('timer-start-btn').textContent = 'Iniciar';
-  document.getElementById('timer-label').textContent = timerTotal > 0 ? 'Pronto — clique em Iniciar' : 'Escolha um preset ou digite o tempo';
+  document.getElementById('timer-label').textContent = 'Escolha um preset ou digite o tempo';
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
 }
 
 function showTimerAlert() {
-  const overlay = document.getElementById('timer-alert-overlay');
   document.getElementById('alert-muted-badge').style.display = timerMuted ? 'inline-block' : 'none';
-  overlay.style.display = 'flex';
+  document.getElementById('timer-alert-overlay').style.display = 'flex';
 }
 
 function closeTimerAlert() {
