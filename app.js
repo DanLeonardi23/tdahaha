@@ -1,3 +1,18 @@
+// ===== THEME =====
+function toggleTheme() {
+  const isDark = document.body.classList.toggle("dark");
+  document.getElementById("theme-icon-moon").style.display = isDark ? "none" : "";
+  document.getElementById("theme-icon-sun").style.display  = isDark ? "" : "none";
+  localStorage.setItem("tdahaha-theme", isDark ? "dark" : "light");
+}
+(function() {
+  if (localStorage.getItem("tdahaha-theme") === "dark") {
+    document.body.classList.add("dark");
+    document.getElementById("theme-icon-moon").style.display = "none";
+    document.getElementById("theme-icon-sun").style.display  = "";
+  }
+})();
+
 // ===== PAGE NAVIGATION =====
 function showPage(page, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -382,7 +397,7 @@ function renderCalEvents() {
   list.innerHTML = evs.map((e, i) => `
     <div class="cal-event-item rel-${e.relevance}">
       <div class="cal-event-body">
-        <div class="cal-event-name">${e.text}</div>
+        <div class="cal-event-name">${e.notify ? '🔔 ' : ''}${e.text}</div>
         ${e.time ? `<div class="cal-event-time-tag">⏰ ${e.time}</div>` : ''}
         ${e.obs ? `<div class="cal-event-obs-text">${e.obs}</div>` : ''}
       </div>
@@ -405,14 +420,54 @@ function addCalEvent() {
   const m = calDate.getMonth() + 1;
   const key = y + '-' + m + '-' + selectedDay;
   if (!calEvents[key]) calEvents[key] = [];
-  calEvents[key].push({ text, time, obs, relevance: currentRelevance });
+  const notify = document.getElementById('cal-notify-check').checked;
+  calEvents[key].push({ text, time, obs, relevance: currentRelevance, notify });
   document.getElementById('cal-event-input').value = '';
   document.getElementById('cal-event-time').value = '';
   document.getElementById('cal-event-obs').value = '';
+  document.getElementById('cal-notify-check').checked = false;
   renderCalendar();
 }
 
 renderCalendar();
+
+// ===== EVENT DAY-BEFORE ALERTS =====
+function getTomorrowKey() {
+  const t = new Date();
+  t.setDate(t.getDate() + 1);
+  return (t.getFullYear()) + '-' + (t.getMonth() + 1) + '-' + t.getDate();
+}
+
+function checkEventAlerts() {
+  const key = getTomorrowKey();
+  const evs = (calEvents[key] || []).filter(e => e.notify);
+  if (!evs.length) return;
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const label = tomorrow.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const list = document.getElementById('event-alert-list');
+  list.innerHTML = evs.map((e, i) => `
+    <div class="event-alert-item rel-${e.relevance}">
+      <div class="event-alert-body">
+        <div class="event-alert-name">${e.text}</div>
+        ${e.time ? `<div class="event-alert-time">⏰ ${e.time}</div>` : ''}
+        ${e.obs  ? `<div class="event-alert-obs">${e.obs}</div>`   : ''}
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelector('.event-alert-title').textContent = 'Amanhã — ' + label;
+  document.getElementById('event-alert-overlay').style.display = 'flex';
+}
+
+function closeEventAlerts() {
+  document.getElementById('event-alert-overlay').style.display = 'none';
+}
+
+// Run check on startup
+checkEventAlerts();
 
 // ===== REMINDERS =====
 let reminders = [

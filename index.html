@@ -16,7 +16,13 @@
       <button class="nav-tab active" onclick="showPage('main', this)">Início</button>
       <button class="nav-tab notes-tab" onclick="showPage('notes', this)">Ideias</button>
     </div>
-    <div class="nav-time" id="clock">00:00</div>
+    <div class="nav-right">
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+        <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <div class="nav-time" id="clock">00:00</div>
+    </div>
   </nav>
 
   <!-- MAIN PAGE -->
@@ -104,6 +110,10 @@
               <button class="cal-event-btn" onclick="addCalEvent()">+</button>
             </div>
             <textarea class="cal-event-obs" id="cal-event-obs" placeholder="Observações (opcional)..." rows="2"></textarea>
+            <label class="cal-notify-row">
+              <input type="checkbox" id="cal-notify-check" class="cal-notify-check" />
+              <span class="cal-notify-label">🔔 Avisar um dia antes</span>
+            </label>
           </div>
 
           <!-- Scrollable events list below -->
@@ -114,17 +124,17 @@
       <!-- RIGHT: Reminders + Stats -->
       <div class="right-col">
         <div class="card reminders-card">
-          <div class="tasks-header">
+          <div class="reminders-header">
             <span class="card-title">Lembretes Rápidos</span>
           </div>
-          <div class="reminder-list" id="reminder-list"></div>
           <div class="reminder-input-row">
             <div class="reminder-inputs">
               <input class="reminder-input" id="reminder-input" placeholder="Novo lembrete..." onkeydown="if(event.key==='Enter')addReminder()" />
               <input class="reminder-time-input" id="reminder-time" type="time" />
             </div>
-            <button class="reminder-add-btn" onclick="addReminder()">Adicionar</button>
+            <button class="reminder-add-btn" onclick="addReminder()">+</button>
           </div>
+          <div class="reminder-list" id="reminder-list"></div>
         </div>
 
         <div class="card stats-card">
@@ -170,6 +180,18 @@
 </div>
 
 <!-- TIMER ALERT OVERLAY -->
+<!-- EVENT DAY-BEFORE ALERT OVERLAY -->
+<div id="event-alert-overlay" style="display:none;">
+  <div class="event-alert-panel">
+    <div class="event-alert-header">
+      <span class="event-alert-icon">🔔</span>
+      <span class="event-alert-title">Eventos Amanhã</span>
+      <button class="event-alert-close" onclick="closeEventAlerts()">✕</button>
+    </div>
+    <div class="event-alert-list" id="event-alert-list"></div>
+  </div>
+</div>
+
 <div id="timer-alert-overlay" style="display:none;">
   <div class="alert-box">
     <div class="alert-icon">⏰</div>
