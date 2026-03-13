@@ -16,37 +16,187 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// ===== TIMER =====
+// ===== TIMER (regressivo) =====
 let timerRunning = false;
 let timerSeconds = 0;
+let timerTotal = 0;
 let timerInterval = null;
+let timerMuted = false;
+let audioCtx = null;
+let activeAlarmNodes = [];
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTickSound() {
+  if (timerMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.08);
+  } catch(e) {}
+}
+
+function playUrgentTick() {
+  if (timerMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 1200;
+    osc.type = 'square';
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.1);
+  } catch(e) {}
+}
+
+function playAlarmSound() {
+  if (timerMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    stopAlarm();
+    const pattern = [900, 700, 900, 700, 900];
+    pattern.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sawtooth';
+      const t = ctx.currentTime + i * 0.35;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.25, t + 0.05);
+      gain.gain.linearRampToValueAtTime(0.2, t + 0.25);
+      gain.gain.linearRampToValueAtTime(0, t + 0.32);
+      osc.start(t);
+      osc.stop(t + 0.35);
+      activeAlarmNodes.push(osc);
+    });
+  } catch(e) {}
+}
+
+function stopAlarm() {
+  activeAlarmNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+  activeAlarmNodes = [];
+}
+
+function toggleMute() {
+  timerMuted = !timerMuted;
+  document.getElementById('mute-icon-on').style.display = timerMuted ? 'none' : 'block';
+  document.getElementById('mute-icon-off').style.display = timerMuted ? 'block' : 'none';
+  const btn = document.getElementById('mute-btn');
+  btn.classList.toggle('muted', timerMuted);
+  if (timerMuted) stopAlarm();
+}
+
+function applyPreset(mins) {
+  timerTotal = mins * 60;
+  timerSeconds = timerTotal;
+  document.getElementById('timer-set-input').value = mins + ':00';
+  updateTimerDisplay();
+  document.getElementById('timer-label').textContent = 'Pronto — clique em Iniciar';
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timer-start-btn').textContent = 'Iniciar';
+  }
+}
+
+function setTimerFromInput() {
+  const raw = document.getElementById('timer-set-input').value;
+  const parts = raw.split(':');
+  let mins = 0, secs = 0;
+  if (parts.length === 2) {
+    mins = parseInt(parts[0]) || 0;
+    secs = parseInt(parts[1]) || 0;
+  } else {
+    mins = parseInt(raw) || 0;
+  }
+  timerTotal = mins * 60 + secs;
+  timerSeconds = timerTotal;
+  updateTimerDisplay();
+  document.getElementById('timer-label').textContent = 'Pronto — clique em Iniciar';
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+  const s = (timerSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('timer-display').textContent = m + ':' + s;
+  const pct = timerTotal > 0 ? (timerSeconds / timerTotal) * 100 : 0;
+  document.getElementById('timer-progress').style.width = pct + '%';
+  const color = pct > 50 ? '#6BCB77' : pct > 20 ? '#FFD93D' : '#FF6B6B';
+  document.getElementById('timer-progress').style.background = color;
+}
 
 function toggleTimer() {
+  if (timerSeconds <= 0 && !timerRunning) return;
   if (timerRunning) {
     clearInterval(timerInterval);
     timerRunning = false;
     document.getElementById('timer-start-btn').textContent = 'Retomar';
     document.getElementById('timer-label').textContent = 'Em pausa';
   } else {
+    if (timerSeconds <= 0) return;
     timerRunning = true;
     document.getElementById('timer-start-btn').textContent = 'Pausar';
     document.getElementById('timer-label').textContent = 'Contando...';
     timerInterval = setInterval(() => {
-      timerSeconds++;
-      const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
-      const s = (timerSeconds % 60).toString().padStart(2, '0');
-      document.getElementById('timer-display').textContent = m + ':' + s;
+      timerSeconds--;
+      updateTimerDisplay();
+      if (timerSeconds <= 10 && timerSeconds > 0) {
+        playUrgentTick();
+      } else if (timerSeconds > 10) {
+        if (timerSeconds % 60 === 0) playTickSound();
+      }
+      if (timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('timer-start-btn').textContent = 'Iniciar';
+        document.getElementById('timer-label').textContent = 'Finalizado!';
+        playAlarmSound();
+        showTimerAlert();
+      }
     }, 1000);
   }
 }
 
 function resetTimer() {
   clearInterval(timerInterval);
+  stopAlarm();
   timerRunning = false;
-  timerSeconds = 0;
-  document.getElementById('timer-display').textContent = '00:00';
+  timerSeconds = timerTotal;
+  updateTimerDisplay();
   document.getElementById('timer-start-btn').textContent = 'Iniciar';
-  document.getElementById('timer-label').textContent = 'Pronto para começar';
+  document.getElementById('timer-label').textContent = timerTotal > 0 ? 'Pronto — clique em Iniciar' : 'Escolha um preset ou digite o tempo';
+}
+
+function showTimerAlert() {
+  const overlay = document.getElementById('timer-alert-overlay');
+  document.getElementById('alert-muted-badge').style.display = timerMuted ? 'inline-block' : 'none';
+  overlay.style.display = 'flex';
+}
+
+function closeTimerAlert() {
+  document.getElementById('timer-alert-overlay').style.display = 'none';
+  stopAlarm();
+  resetTimer();
 }
 
 // ===== TASKS =====

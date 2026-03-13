@@ -6,22 +6,22 @@
 }
 
 :root {
-  --c1: #ff6b6b;
-  --c2: #ffd93d;
-  --c3: #6bcb77;
-  --c4: #4d96ff;
-  --c5: #c77dff;
-  --bg: #f7f5ff;
-  --card: #ffffff;
-  --text: #2d2b55;
-  --muted: #8884a8;
+  --c1: #FF6B6B;
+  --c2: #FFD93D;
+  --c3: #6BCB77;
+  --c4: #4D96FF;
+  --c5: #C77DFF;
+  --bg: #F7F5FF;
+  --card: #FFFFFF;
+  --text: #2D2B55;
+  --muted: #8884A8;
   --radius: 16px;
   --radius-sm: 10px;
 }
 
 /* ===== BASE ===== */
 body {
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -42,12 +42,12 @@ body {
   padding: 0 20px;
   height: 58px;
   background: var(--card);
-  border-bottom: 2px solid #eeeaf8;
+  border-bottom: 2px solid #EEEAF8;
   flex-shrink: 0;
 }
 
 .nav-logo {
-  font-family: "Fredoka One", sans-serif;
+  font-family: 'Fredoka One', sans-serif;
   font-size: 22px;
   color: var(--c5);
   letter-spacing: 1px;
@@ -67,7 +67,7 @@ body {
   border-radius: 20px;
   font-size: 13px;
   font-weight: 700;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s;
@@ -76,7 +76,7 @@ body {
 }
 
 .nav-tab:hover {
-  background: #f0ecff;
+  background: #F0ECFF;
   color: var(--c5);
 }
 
@@ -131,7 +131,7 @@ body {
   background: var(--card);
   border-radius: var(--radius);
   padding: 16px;
-  border: 2px solid #eeeaf8;
+  border: 2px solid #EEEAF8;
 }
 
 .card-title {
@@ -145,11 +145,11 @@ body {
 
 /* ===== TIMER ===== */
 .timer-card {
-  border-color: #ffd6d6;
+  border-color: #FFD6D6;
 }
 
 .timer-display {
-  font-family: "Fredoka One", sans-serif;
+  font-family: 'Fredoka One', sans-serif;
   font-size: 52px;
   text-align: center;
   color: var(--c1);
@@ -168,7 +168,7 @@ body {
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-weight: 800;
   font-size: 14px;
   transition: all 0.15s;
@@ -180,17 +180,17 @@ body {
 }
 
 .timer-btn.start:hover {
-  background: #ff5252;
+  background: #FF5252;
   transform: scale(1.02);
 }
 
 .timer-btn.reset {
-  background: #ffe8e8;
+  background: #FFE8E8;
   color: var(--c1);
 }
 
 .timer-btn.reset:hover {
-  background: #ffcdd2;
+  background: #FFCDD2;
 }
 
 .timer-label {
@@ -203,7 +203,7 @@ body {
 
 /* ===== TASKS ===== */
 .tasks-card {
-  border-color: #d6f0ff;
+  border-color: #D6F0FF;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -241,7 +241,7 @@ body {
 
 .add-btn:hover {
   transform: scale(1.1);
-  background: #3080ff;
+  background: #3080FF;
 }
 
 .tasks-list {
@@ -260,7 +260,7 @@ body {
 }
 
 .task-item:hover {
-  background: #f0f8ff;
+  background: #F0F8FF;
 }
 
 .task-check {
@@ -323,10 +323,10 @@ body {
 
 .task-input {
   flex: 1;
-  border: 2px solid #d6f0ff;
+  border: 2px solid #D6F0FF;
   border-radius: 8px;
   padding: 7px 10px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-size: 13px;
   color: var(--text);
   outline: none;
@@ -342,7 +342,7 @@ body {
   border-radius: 8px;
   color: white;
   padding: 7px 12px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 13px;
@@ -350,7 +350,7 @@ body {
 
 /* ===== CALENDAR ===== */
 .calendar-card {
-  border-color: #e8d6ff;
+  border-color: #E8D6FF;
   display: flex;
   flex-direction: column;
 }
@@ -363,14 +363,14 @@ body {
 }
 
 .cal-month {
-  font-family: "Fredoka One", sans-serif;
+  font-family: 'Fredoka One', sans-serif;
   font-size: 18px;
   color: var(--c5);
 }
 
 .cal-nav {
   background: none;
-  border: 2px solid #e8d6ff;
+  border: 2px solid #E8D6FF;
   border-radius: 8px;
   width: 28px;
   height: 28px;
@@ -414,7 +414,7 @@ body {
 }
 
 .cal-day:hover {
-  background: #f0ecff;
+  background: #F0ECFF;
 }
 
 .cal-day.today {
@@ -423,15 +423,15 @@ body {
 }
 
 .cal-day.selected:not(.today) {
-  background: #f0ecff;
+  background: #F0ECFF;
 }
 
 .cal-day.other-month {
-  color: #c8c4e0;
+  color: #C8C4E0;
 }
 
 .cal-day.has-event::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 2px;
   left: 50%;
@@ -448,7 +448,7 @@ body {
 
 .cal-event-area {
   margin-top: 12px;
-  border-top: 2px solid #eeeaf8;
+  border-top: 2px solid #EEEAF8;
   padding-top: 10px;
   flex: 1;
 }
@@ -486,10 +486,10 @@ body {
 
 .cal-event-input {
   flex: 1;
-  border: 2px solid #e8d6ff;
+  border: 2px solid #E8D6FF;
   border-radius: 8px;
   padding: 6px 8px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-size: 12px;
   color: var(--text);
   outline: none;
@@ -505,7 +505,7 @@ body {
   border-radius: 8px;
   color: white;
   padding: 6px 10px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 12px;
@@ -513,7 +513,7 @@ body {
 
 /* ===== REMINDERS ===== */
 .reminders-card {
-  border-color: #d6ffe8;
+  border-color: #D6FFE8;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -536,7 +536,7 @@ body {
 }
 
 .reminder-item:hover {
-  background: #f0fff5;
+  background: #F0FFF5;
 }
 
 .reminder-icon {
@@ -594,10 +594,10 @@ body {
 
 .reminder-input {
   flex: 1;
-  border: 2px solid #d6ffe8;
+  border: 2px solid #D6FFE8;
   border-radius: 8px;
   padding: 6px 9px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-size: 12px;
   color: var(--text);
   outline: none;
@@ -611,10 +611,10 @@ body {
 .reminder-time-input {
   width: 85px;
   flex-shrink: 0;
-  border: 2px solid #d6ffe8;
+  border: 2px solid #D6FFE8;
   border-radius: 8px;
   padding: 6px 6px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-size: 12px;
   color: var(--text);
   outline: none;
@@ -626,7 +626,7 @@ body {
   border-radius: 8px;
   color: white;
   padding: 7px 12px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 12px;
@@ -635,7 +635,7 @@ body {
 
 /* ===== STATS ===== */
 .stats-card {
-  border-color: #fff3d6;
+  border-color: #FFF3D6;
 }
 
 .stats-grid {
@@ -651,16 +651,16 @@ body {
 }
 
 .stat-yellow {
-  background: #fff8e8;
+  background: #FFF8E8;
 }
 
 .stat-green {
-  background: #f0fff5;
+  background: #F0FFF5;
 }
 
 .stat-number {
   font-size: 22px;
-  font-family: "Fredoka One", sans-serif;
+  font-family: 'Fredoka One', sans-serif;
   color: var(--c2);
 }
 
@@ -694,7 +694,7 @@ body {
 }
 
 .notes-page-title {
-  font-family: "Fredoka One", sans-serif;
+  font-family: 'Fredoka One', sans-serif;
   font-size: 20px;
   color: var(--c3);
 }
@@ -717,7 +717,7 @@ body {
 
 .note-card-mini {
   background: var(--card);
-  border: 2px solid #eeeaf8;
+  border: 2px solid #EEEAF8;
   border-radius: var(--radius-sm);
   padding: 10px 12px;
   cursor: pointer;
@@ -730,7 +730,7 @@ body {
 
 .note-card-mini.active {
   border-color: var(--c3);
-  background: #f0fff5;
+  background: #F0FFF5;
 }
 
 .note-mini-title {
@@ -764,7 +764,7 @@ body {
   border-radius: var(--radius-sm);
   color: white;
   padding: 9px 16px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 13px;
@@ -772,14 +772,14 @@ body {
 }
 
 .new-note-btn:hover {
-  background: #55bb60;
+  background: #55BB60;
   transform: scale(1.02);
 }
 
 .note-editor {
   flex: 1;
   background: var(--card);
-  border: 2px solid #d6ffe8;
+  border: 2px solid #D6FFE8;
   border-radius: var(--radius);
   padding: 16px;
   display: flex;
@@ -810,23 +810,23 @@ body {
 .note-title-input {
   border: none;
   outline: none;
-  font-family: "Fredoka One", sans-serif;
+  font-family: 'Fredoka One', sans-serif;
   font-size: 22px;
   color: var(--text);
   background: transparent;
   width: 100%;
-  border-bottom: 2px solid #eeeaf8;
+  border-bottom: 2px solid #EEEAF8;
   padding-bottom: 8px;
 }
 
 .note-title-input::placeholder {
-  color: #c8c4e0;
+  color: #C8C4E0;
 }
 
 .note-content-input {
   border: none;
   outline: none;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-size: 14px;
   color: var(--text);
   background: transparent;
@@ -837,7 +837,7 @@ body {
 }
 
 .note-content-input::placeholder {
-  color: #c8c4e0;
+  color: #C8C4E0;
 }
 
 .note-footer {
@@ -846,7 +846,7 @@ body {
   justify-content: space-between;
   flex-shrink: 0;
   padding-top: 8px;
-  border-top: 2px solid #eeeaf8;
+  border-top: 2px solid #EEEAF8;
 }
 
 .note-actions {
@@ -866,7 +866,7 @@ body {
   border-radius: 8px;
   color: white;
   padding: 8px 20px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 13px;
@@ -874,26 +874,237 @@ body {
 }
 
 .note-save-btn:hover {
-  background: #55bb60;
+  background: #55BB60;
 }
 
 .note-del-btn {
-  background: #fff0f0;
+  background: #FFF0F0;
   border: none;
   border-radius: 8px;
   color: var(--c1);
   padding: 8px 14px;
-  font-family: "Nunito", sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-weight: 800;
   cursor: pointer;
   font-size: 13px;
 }
 
 .note-del-btn:hover {
-  background: #ffcdd2;
+  background: #FFCDD2;
 }
 
-/* ===== SCROLLBAR ===== */
+/* ===== TIMER HEADER ROW ===== */
+.timer-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.mute-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #FFD6D6;
+  background: #FFF8F8;
+  color: var(--c1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.mute-btn:hover {
+  background: var(--c1);
+  color: white;
+  border-color: var(--c1);
+}
+
+.mute-btn.muted {
+  background: #F0ECFF;
+  border-color: #C8C4E0;
+  color: var(--muted);
+}
+
+/* ===== TIMER PRESETS ===== */
+.timer-presets {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.preset-btn {
+  flex: 1;
+  padding: 6px 4px;
+  border-radius: 8px;
+  border: 2px solid #FFD6D6;
+  background: #FFF8F8;
+  color: var(--c1);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.preset-btn:hover {
+  background: #FFE8E8;
+  border-color: var(--c1);
+}
+
+.preset-btn.active {
+  background: var(--c1);
+  color: white;
+  border-color: var(--c1);
+}
+
+/* ===== TIMER ALERT MUTED STATE ===== */
+.alert-muted-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  background: #F0ECFF;
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-bottom: 12px;
+}
+
+/* ===== TIMER INPUT & PROGRESS ===== */
+.timer-set-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.timer-set-input {
+  flex: 1;
+  border: 2px solid #FFD6D6;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-family: 'Fredoka One', sans-serif;
+  font-size: 18px;
+  color: var(--c1);
+  outline: none;
+  text-align: center;
+  letter-spacing: 2px;
+  background: #FFF8F8;
+}
+
+.timer-set-input:focus {
+  border-color: var(--c1);
+}
+
+.timer-set-input::placeholder {
+  color: #F0BCBC;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.timer-set-btn {
+  background: #FFE8E8;
+  border: 2px solid #FFD6D6;
+  border-radius: 8px;
+  color: var(--c1);
+  padding: 7px 12px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.timer-set-btn:hover {
+  background: var(--c1);
+  color: white;
+}
+
+.timer-progress-track {
+  height: 6px;
+  background: #FFE8E8;
+  border-radius: 3px;
+  margin: 4px 0 10px;
+  overflow: hidden;
+}
+
+.timer-progress {
+  height: 100%;
+  width: 0%;
+  background: var(--c3);
+  border-radius: 3px;
+  transition: width 1s linear, background 0.5s;
+}
+
+/* ===== TIMER ALERT OVERLAY ===== */
+#timer-alert-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 43, 85, 0.65);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alert-box {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 40px 48px;
+  text-align: center;
+  border: 3px solid var(--c1);
+  max-width: 360px;
+  width: 90%;
+  animation: alert-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes alert-bounce {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.alert-pop {
+  animation: alert-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.alert-icon {
+  font-size: 52px;
+  margin-bottom: 12px;
+}
+
+.alert-title {
+  font-family: 'Fredoka One', sans-serif;
+  font-size: 32px;
+  color: var(--c1);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.alert-sub {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.alert-btn {
+  background: var(--c1);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  padding: 12px 32px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.alert-btn:hover {
+  background: #FF5252;
+  transform: scale(1.04);
+}
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -904,6 +1115,6 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d4ceff;
+  background: #D4CEFF;
   border-radius: 4px;
 }
