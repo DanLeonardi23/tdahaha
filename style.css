@@ -205,12 +205,17 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
 .preset-btn:hover { background: var(--timer-btn-bg); }
 .preset-btn.active { background: var(--c1); color: white; border-color: var(--c1); }
 
-.timer-set-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.timer-set-row {
+  display: flex; gap: 6px; margin-bottom: 8px;
+  align-items: center;
+}
 .timer-set-input {
-  flex: 1; border: 2px solid var(--timer-border); border-radius: 8px;
-  padding: 7px 10px; font-family: 'Fredoka One', sans-serif; font-size: 18px;
+  flex: 1; min-width: 0;
+  border: 2px solid var(--timer-border); border-radius: 8px;
+  padding: 7px 0; font-family: 'Fredoka One', sans-serif; font-size: 18px;
   color: var(--c1); outline: none; text-align: center; letter-spacing: 2px;
   background: var(--timer-soft-bg);
+  display: block;
 }
 .timer-set-input:focus { border-color: var(--c1); }
 .timer-set-input::placeholder { color: var(--placeholder); font-size: 16px; letter-spacing: 1px; }
@@ -219,7 +224,8 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   background: var(--timer-btn-bg); border: 2px solid var(--timer-border);
   border-radius: 8px; color: var(--c1); padding: 7px 12px;
   font-family: 'Nunito', sans-serif; font-weight: 800; cursor: pointer;
-  font-size: 13px; transition: all 0.15s;
+  font-size: 13px; transition: all 0.15s; flex-shrink: 0;
+  align-self: stretch; display: flex; align-items: center;
 }
 .timer-set-btn:hover { background: var(--c1); color: white; }
 
