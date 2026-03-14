@@ -2,6 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TDAHAHA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -9,7 +12,55 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<div class="app">
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">TDAH<span>AHA</span></div>
+    <div class="login-subtitle">Sua agenda do jeito que sua mente funciona</div>
+    <div class="login-form">
+      <div class="login-field">
+        <label class="login-label">Nome de usuário</label>
+        <input class="login-input" id="login-username" type="text" placeholder="seu nome" autocomplete="username" />
+      </div>
+      <div class="login-field">
+        <label class="login-label">Senha</label>
+        <input class="login-input" id="login-password" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="login-error" id="login-error"></div>
+      <button class="login-btn" onclick="doLogin()">Entrar</button>
+      <button class="login-register-link" onclick="showRegister()">Não tem conta? Criar agora</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="register-screen" class="login-screen" style="display:none;">
+  <div class="login-box">
+    <div class="login-logo">TDAH<span>AHA</span></div>
+    <div class="login-subtitle">Criar nova conta</div>
+    <div class="login-form">
+      <div class="login-field">
+        <label class="login-label">Nome de usuário</label>
+        <input class="login-input" id="reg-username" type="text" placeholder="escolha um nome único" />
+      </div>
+      <div class="login-field">
+        <label class="login-label">Senha</label>
+        <input class="login-input" id="reg-password" type="password" placeholder="mínimo 4 caracteres" />
+      </div>
+      <div class="login-field">
+        <label class="login-label">Confirmar senha</label>
+        <input class="login-input" id="reg-password2" type="password" placeholder="repita a senha" onkeydown="if(event.key==='Enter')doRegister()" />
+      </div>
+      <div class="login-error" id="reg-error"></div>
+      <button class="login-btn" onclick="doRegister()">Criar conta</button>
+      <button class="login-register-link" onclick="showLogin()">Já tem conta? Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="main-app" style="display:none;">
   <nav class="nav">
     <div class="nav-logo">TDAH<span>AHA</span></div>
     <div class="nav-tabs">
@@ -17,6 +68,14 @@
       <button class="nav-tab notes-tab" onclick="showPage('notes', this)">Ideias</button>
     </div>
     <div class="nav-right">
+      <button class="invite-badge-btn" id="invite-badge-btn" onclick="openPendingInvites()" title="Convites pendentes" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="invite-badge-count" id="invite-badge-count">0</span>
+      </button>
+      <div class="nav-user" id="nav-user">—</div>
+      <button class="logout-btn" onclick="doLogout()" title="Sair">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
       <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
         <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -25,13 +84,11 @@
     </div>
   </nav>
 
-  <!-- MAIN PAGE -->
   <div class="page active" id="page-main">
     <div class="main-grid">
 
-      <!-- LEFT: Timer + Tasks -->
+      <!-- LEFT -->
       <div class="left-col">
-        <!-- Timer -->
         <div class="card timer-card">
           <div class="timer-header-row">
             <div class="card-title" style="margin-bottom:0;">Cronometro regressivo</div>
@@ -47,18 +104,12 @@
             <button class="preset-btn" onclick="applyPreset(45)">45 min</button>
           </div>
           <div class="timer-set-row">
-            <input class="timer-set-input" id="timer-set-input" type="text"
-              value="00:00:00" maxlength="8" inputmode="numeric"
-              onkeydown="timerInputKeydown(event)"
-              onkeyup="timerInputKeyup(event)"
-              onfocus="timerInputFocus()"
-              onpaste="return false;" />
+            <input class="timer-set-input" id="timer-set-input" type="text" value="00:00:00" maxlength="8" inputmode="numeric"
+              onkeydown="timerInputKeydown(event)" onkeyup="timerInputKeyup(event)" onfocus="timerInputFocus()" onpaste="return false;" />
             <button class="timer-set-btn" onclick="setTimerFromInput()">Definir</button>
           </div>
           <div class="timer-display" id="timer-display">00:00:00</div>
-          <div class="timer-progress-track">
-            <div class="timer-progress" id="timer-progress"></div>
-          </div>
+          <div class="timer-progress-track"><div class="timer-progress" id="timer-progress"></div></div>
           <div class="timer-btns">
             <button class="timer-btn start" id="timer-start-btn" onclick="toggleTimer()">Iniciar</button>
             <button class="timer-btn reset" onclick="resetTimer()">Zerar</button>
@@ -66,11 +117,8 @@
           <div class="timer-label" id="timer-label">Escolha um preset ou digite o tempo</div>
         </div>
 
-        <!-- Tasks -->
         <div class="card tasks-card">
-          <div class="tasks-header">
-            <span class="card-title">Tarefas</span>
-          </div>
+          <div class="tasks-header"><span class="card-title">Tarefas</span></div>
           <div class="task-input-row">
             <input class="task-input" id="task-input" placeholder="Nova tarefa..." onkeydown="if(event.key==='Enter')addTask()" />
             <button class="task-add-confirm" onclick="addTask()">+</button>
@@ -90,11 +138,12 @@
           <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
           <div class="cal-month" id="cal-month-label"></div>
           <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
+          <button class="cal-collapse-btn" id="cal-collapse-btn" onclick="toggleCalEvents()" title="Minimizar painel de eventos">
+            <svg id="cal-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
-
-        <div class="cal-event-area">
-          <!-- Fixed input block -->
+        <div class="cal-event-area" id="cal-event-area">
           <div class="cal-add-block">
             <div class="cal-day-label-row">
               <div class="cal-event-title" id="cal-day-label">Eventos</div>
@@ -110,23 +159,25 @@
               <button class="cal-event-btn" onclick="addCalEvent()">+</button>
             </div>
             <textarea class="cal-event-obs" id="cal-event-obs" placeholder="Observações (opcional)..." rows="2"></textarea>
-            <label class="cal-notify-row">
-              <input type="checkbox" id="cal-notify-check" class="cal-notify-check" />
-              <span class="cal-notify-label">🔔 Avisar um dia antes</span>
-            </label>
+            <div class="cal-options-row">
+              <label class="cal-notify-row">
+                <input type="checkbox" id="cal-notify-check" class="cal-notify-check" />
+                <span class="cal-notify-label">🔔 Avisar um dia antes</span>
+              </label>
+              <label class="cal-notify-row" id="cal-share-row" style="display:none;">
+                <input type="checkbox" id="cal-share-check" class="cal-notify-check" />
+                <span class="cal-notify-label">📤 Compartilhar com <strong id="other-user-name">—</strong></span>
+              </label>
+            </div>
           </div>
-
-          <!-- Scrollable events list below -->
           <div class="cal-events-list" id="cal-events-list"></div>
         </div>
       </div>
 
-      <!-- RIGHT: Reminders + Stats -->
+      <!-- RIGHT -->
       <div class="right-col">
         <div class="card reminders-card">
-          <div class="reminders-header">
-            <span class="card-title">Lembretes Rápidos</span>
-          </div>
+          <div class="reminders-header"><span class="card-title">Lembretes Rápidos</span></div>
           <div class="reminder-input-row">
             <div class="reminder-inputs">
               <input class="reminder-input" id="reminder-input" placeholder="Novo lembrete..." onkeydown="if(event.key==='Enter')addReminder()" />
@@ -136,7 +187,6 @@
           </div>
           <div class="reminder-list" id="reminder-list"></div>
         </div>
-
         <div class="card stats-card">
           <div class="card-title">Hoje</div>
           <div class="stats-grid">
@@ -165,7 +215,7 @@
             <div class="empty-text">Clique em "Nova Ideia" para começar</div>
           </div>
           <input class="note-title-input" id="note-title" placeholder="Título da ideia..." oninput="updateNotePreview()" style="display:none;" />
-          <textarea class="note-content-input" id="note-content" placeholder="Escreva sua ideia aqui... Não julgue, só deixa fluir!" oninput="updateNotePreview()" style="display:none;"></textarea>
+          <textarea class="note-content-input" id="note-content" placeholder="Escreva sua ideia aqui..." oninput="updateNotePreview()" style="display:none;"></textarea>
           <div class="note-footer" id="note-footer" style="display:none;">
             <span class="note-char-count" id="char-count">0 caracteres</span>
             <div class="note-actions">
@@ -179,8 +229,19 @@
   </div>
 </div>
 
-<!-- TIMER ALERT OVERLAY -->
-<!-- EVENT DAY-BEFORE ALERT OVERLAY -->
+<!-- INVITE OVERLAY -->
+<div id="invite-overlay" style="display:none;">
+  <div class="invite-panel">
+    <div class="invite-panel-header">
+      <span class="invite-panel-icon">📬</span>
+      <span class="invite-panel-title">Convites Pendentes</span>
+    </div>
+    <div class="invite-panel-list" id="invite-panel-list"></div>
+    <button class="invite-panel-close" onclick="closeInviteOverlay()">Fechar</button>
+  </div>
+</div>
+
+<!-- EVENT ALERT OVERLAY -->
 <div id="event-alert-overlay" style="display:none;">
   <div class="event-alert-panel">
     <div class="event-alert-header">
@@ -192,6 +253,7 @@
   </div>
 </div>
 
+<!-- TIMER ALERT OVERLAY -->
 <div id="timer-alert-overlay" style="display:none;">
   <div class="alert-box">
     <div class="alert-icon">⏰</div>
@@ -202,6 +264,6 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script type="module" src="app.js?v=3"></script>
 </body>
 </html>
