@@ -186,6 +186,8 @@
 
       <!-- RIGHT -->
       <div class="right-col">
+
+        <!-- LEMBRETES com contador embutido -->
         <div class="card reminders-card">
           <div class="reminders-header"><span class="card-title">Lembretes Rápidos</span></div>
           <div class="reminder-input-row">
@@ -196,16 +198,46 @@
             <button class="reminder-add-btn" onclick="addReminder()">+</button>
           </div>
           <div class="reminder-list" id="reminder-list"></div>
+          <div class="reminders-done-bar">
+            <span class="reminders-done-label">Hoje</span>
+            <span class="reminders-done-count" id="stat-reminders">0</span>
+          </div>
         </div>
-        <div class="card stats-card">
-          <div class="card-title">Hoje</div>
-          <div class="stats-grid">
-            <div class="stat-box stat-green">
-              <div class="stat-number green" id="stat-reminders">0</div>
-              <div class="stat-label">Lembretes</div>
+
+        <!-- DASHBOARD XP — ocupa o espaço do antigo card "Hoje" -->
+        <div class="card xp-card" id="xp-card">
+          <div class="card-title">Produtividade</div>
+          <div class="xp-header">
+            <div class="xp-level-badge" id="xp-level-badge">⚡</div>
+            <div class="xp-header-info">
+              <div class="xp-level-name" id="xp-level-name">Faísca</div>
+              <div class="xp-pts-label"><span id="xp-current">0</span> / <span id="xp-next">100</span> XP</div>
+            </div>
+            <div class="xp-streak" id="xp-streak" title="Dias consecutivos">🔥 <span id="xp-streak-count">0</span></div>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill" id="xp-bar-fill"></div>
+          </div>
+          <div class="xp-stats-row">
+            <div class="xp-stat">
+              <div class="xp-stat-num" id="xp-tasks-done">0</div>
+              <div class="xp-stat-lbl">Tarefas</div>
+            </div>
+            <div class="xp-stat">
+              <div class="xp-stat-num" id="xp-events-created">0</div>
+              <div class="xp-stat-lbl">Eventos</div>
+            </div>
+            <div class="xp-stat">
+              <div class="xp-stat-num" id="xp-reminders-created">0</div>
+              <div class="xp-stat-lbl">Lembretes</div>
+            </div>
+            <div class="xp-stat">
+              <div class="xp-stat-num" id="xp-notes-created">0</div>
+              <div class="xp-stat-lbl">Ideias</div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>

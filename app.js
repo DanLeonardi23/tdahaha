@@ -125,6 +125,10 @@ function resetAppState() {
   notes           = [];
   currentNoteId   = null;
 
+  // XP
+  xpData = { totalXp:0, tasksDone:0, eventsCreated:0, remindersCreated:0, notesCreated:0, timersCompleted:0, streak:0, lastActiveDate:null };
+  renderXp();
+
   // Invites listeners
   if (unsubInvites)     { unsubInvites();     unsubInvites     = null; }
   if (unsubNoteInvites) { unsubNoteInvites(); unsubNoteInvites = null; }
@@ -189,6 +193,9 @@ async function startApp() {
 
   // Request notification permission
   await requestNotificationPermission();
+
+  // Load XP data
+  await loadXp();
 
   // Load tasks, reminders and notes from Firestore
   await loadTasks();
@@ -457,6 +464,25 @@ function playTickSound(){if(timerMuted)return;try{const c=getAudioCtx(),o=c.crea
 function playUrgentTick(){if(timerMuted)return;try{const c=getAudioCtx(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=1200;o.type="square";g.gain.setValueAtTime(0.1,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.1);o.start(c.currentTime);o.stop(c.currentTime+0.1);}catch(e){}}
 function playAlarmSound(){if(timerMuted)return;try{const c=getAudioCtx();stopAlarm();[900,700,900,700,900].forEach((freq,i)=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=freq;o.type="sawtooth";const t=c.currentTime+i*0.35;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.25,t+0.05);g.gain.linearRampToValueAtTime(0.2,t+0.25);g.gain.linearRampToValueAtTime(0,t+0.32);o.start(t);o.stop(t+0.35);activeAlarmNodes.push(o);});}catch(e){}}
 function stopAlarm(){activeAlarmNodes.forEach(n=>{try{n.stop();}catch(e){}});activeAlarmNodes=[];}
+
+function playReminderSound(){
+  try {
+    const c = getAudioCtx();
+    // Three soft ascending chimes: gentle bell-like tone
+    [[660, 0.0], [880, 0.18], [1100, 0.36]].forEach(([freq, delay]) => {
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.type = "sine";
+      o.frequency.value = freq;
+      const t = c.currentTime + delay;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.22, t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      o.start(t); o.stop(t + 0.52);
+    });
+  } catch(e) {}
+}
 function toggleMute(){timerMuted=!timerMuted;document.getElementById("mute-icon-on").style.display=timerMuted?"none":"block";document.getElementById("mute-icon-off").style.display=timerMuted?"block":"none";document.getElementById("mute-btn").classList.toggle("muted",timerMuted);if(timerMuted)stopAlarm();}
 function applyPreset(mins){
   clearInterval(timerInterval);timerRunning=false;
@@ -486,7 +512,7 @@ function toggleTimer(){
       timerSeconds--;updateTimerDisplay();
       if(timerSeconds<=10&&timerSeconds>0)playUrgentTick();
       else if(timerSeconds>10&&timerSeconds%60===0)playTickSound();
-      if(timerSeconds<=0){clearInterval(timerInterval);timerRunning=false;document.getElementById("timer-start-btn").textContent="Iniciar";document.getElementById("timer-label").textContent="Finalizado!";playAlarmSound();showTimerAlert();}
+      if(timerSeconds<=0){clearInterval(timerInterval);timerRunning=false;document.getElementById("timer-start-btn").textContent="Iniciar";document.getElementById("timer-label").textContent="Finalizado!";playAlarmSound();showTimerAlert();addXp("timer_completed");}
     },1000);
   }
 }
@@ -574,7 +600,7 @@ function toggleTask(id) {
   if (!t) return;
   const was = t.done;
   t.done = !t.done;
-  if (!was && t.done) totalDone++;
+  if (!was && t.done) { totalDone++; addXp("task_done"); }
   if (t.firestoreId) {
     updateDoc(doc(db,"tasks",t.firestoreId), { done: t.done }).catch(console.error);
   }
@@ -825,6 +851,7 @@ async function addCalEvent(){
 
   if(!calEvents[key]) calEvents[key]=[];
   calEvents[key].push(localEv);
+  addXp("event_created");
 
   // Send invite if share checked and other user exists
   if(share && otherUser){
@@ -921,6 +948,12 @@ function renderReminders() {
   });
 
   document.getElementById("stat-reminders").textContent = dayRems.length;
+
+  // Update done bar label
+  const doneBar = document.querySelector(".reminders-done-label");
+  if (doneBar) {
+    doneBar.textContent = dateKey === todayKey ? "Hoje" : formatDateKey(dateKey);
+  }
 }
 
 async function loadReminders() {
@@ -951,6 +984,7 @@ async function addReminder() {
   const data = { ownerUid: currentUser.uid, text, time, color, dateKey, createdAt: serverTimestamp() };
   const ref  = await addDoc(collection(db,"reminders"), data);
   reminders.unshift({ ...data, id: ref.id, firestoreId: ref.id });
+  addXp("reminder_created");
   inp.value = "";
   document.getElementById("reminder-time").value = "";
   renderReminders();
@@ -1010,6 +1044,9 @@ function checkReminderAlerts(currentTime) {
 }
 
 function triggerReminderAlert(r) {
+  // Sound alert
+  playReminderSound();
+
   // In-app banner (always)
   showReminderBanner(r);
 
@@ -1155,6 +1192,7 @@ async function saveNote(){
     const ref = await addDoc(collection(db,"notes"), noteData);
     n.firestoreId = ref.id;
     n.id = ref.id;  // keep id in sync with firestoreId
+    addXp("note_created");
   }
 
   renderNotesSidebar();
@@ -1316,6 +1354,159 @@ function initLocalModules(){
   // Tasks, reminders and notes are loaded from Firestore in startApp
   restoreCalState();
 }
+
+
+// ===== XP / GAMIFICATION SYSTEM =====
+const XP_LEVELS = [
+  { name: "Faísca",      icon: "⚡", min: 0    },
+  { name: "Turbinado",   icon: "🚀", min: 100  },
+  { name: "Hiperfoco",   icon: "🎯", min: 300  },
+  { name: "Modo Deus",   icon: "🌟", min: 700  },
+  { name: "Lendário",    icon: "🏆", min: 1500 },
+];
+
+const XP_REWARDS = {
+  task_done:        10,
+  reminder_created: 8,
+  event_created:    5,
+  note_created:     8,
+  timer_completed:  20,
+};
+
+let xpData = {
+  totalXp:          0,
+  tasksDone:        0,
+  eventsCreated:    0,
+  remindersCreated: 0,
+  notesCreated:     0,
+  streak:           0,
+  lastActiveDate:   null,
+};
+
+async function loadXp() {
+  try {
+    const snap = await getDoc(doc(db, "xp", currentUser.uid));
+    if (snap.exists()) xpData = { ...xpData, ...snap.data() };
+  } catch(e) { console.warn("loadXp:", e); }
+  checkStreak();
+  renderXp();
+}
+
+async function saveXp() {
+  try {
+    await setDoc(doc(db, "xp", currentUser.uid), xpData);
+  } catch(e) { console.warn("saveXp:", e); }
+}
+
+function checkStreak() {
+  const today     = getTodayKey();
+  const last      = xpData.lastActiveDate;
+  if (!last) {
+    xpData.streak = 1;
+  } else if (last === today) {
+    // same day — no change
+  } else {
+    // check if yesterday
+    const yesterday = (() => {
+      const d = new Date(); d.setDate(d.getDate() - 1);
+      return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
+    })();
+    xpData.streak = last === yesterday ? xpData.streak + 1 : 1;
+  }
+  xpData.lastActiveDate = today;
+  saveXp();
+}
+
+function getCurrentLevel() {
+  let level = XP_LEVELS[0];
+  for (const l of XP_LEVELS) {
+    if (xpData.totalXp >= l.min) level = l;
+  }
+  return level;
+}
+
+function getNextLevelXp() {
+  const idx = XP_LEVELS.findIndex(l => l.name === getCurrentLevel().name);
+  return idx < XP_LEVELS.length - 1 ? XP_LEVELS[idx + 1].min : null;
+}
+
+function addXp(type) {
+  const pts = XP_REWARDS[type] || 0;
+  if (!pts) return;
+
+  const prevLevel = getCurrentLevel().name;
+  xpData.totalXp += pts;
+
+  if (type === "task_done")        xpData.tasksDone++;
+  if (type === "event_created")    xpData.eventsCreated++;
+  if (type === "reminder_created") xpData.remindersCreated++;
+  if (type === "note_created")     xpData.notesCreated++;
+  if (type === "timer_completed")  xpData.timersCompleted = (xpData.timersCompleted || 0) + 1;
+
+  saveXp(); // fire-and-forget async
+  renderXp();
+  showXpToast("+" + pts + " XP");
+
+  // Level up celebration
+  const newLevel = getCurrentLevel().name;
+  if (newLevel !== prevLevel) {
+    setTimeout(() => showLevelUpToast(newLevel, getCurrentLevel().icon), 400);
+  }
+}
+
+function renderXp() {
+  if (!document.getElementById("xp-card")) return;
+
+  const level   = getCurrentLevel();
+  const nextXp  = getNextLevelXp();
+  const curXp   = xpData.totalXp;
+  const prevMin = level.min;
+  const pct     = nextXp
+    ? Math.min(100, Math.round(((curXp - prevMin) / (nextXp - prevMin)) * 100))
+    : 100;
+
+  document.getElementById("xp-level-badge").textContent  = level.icon;
+  document.getElementById("xp-level-name").textContent   = level.name;
+  document.getElementById("xp-current").textContent      = curXp;
+  document.getElementById("xp-next").textContent         = nextXp ?? "MAX";
+  document.getElementById("xp-bar-fill").style.width     = pct + "%";
+  document.getElementById("xp-streak-count").textContent = xpData.streak;
+  document.getElementById("xp-tasks-done").textContent   = xpData.tasksDone;
+  document.getElementById("xp-events-created").textContent   = xpData.eventsCreated;
+  document.getElementById("xp-reminders-created").textContent = xpData.remindersCreated;
+  document.getElementById("xp-notes-created").textContent = xpData.notesCreated;
+
+  // Color bar by level
+  const colors = ["var(--c4)","var(--c3)","var(--c2)","var(--c5)","var(--c1)"];
+  const idx    = XP_LEVELS.findIndex(l => l.name === level.name);
+  document.getElementById("xp-bar-fill").style.background = colors[idx] || "var(--c4)";
+}
+
+function showXpToast(msg) {
+  const existing = document.getElementById("xp-toast");
+  if (existing) existing.remove();
+  const t = document.createElement("div");
+  t.id = "xp-toast";
+  t.className = "xp-toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add("visible"));
+  setTimeout(() => t.remove(), 1800);
+}
+
+function showLevelUpToast(levelName, icon) {
+  const existing = document.getElementById("levelup-toast");
+  if (existing) existing.remove();
+  const t = document.createElement("div");
+  t.id = "levelup-toast";
+  t.className = "levelup-toast";
+  t.innerHTML = `<div class="levelup-icon">${icon}</div><div><div class="levelup-title">Novo nível!</div><div class="levelup-name">${levelName}</div></div>`;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add("visible"));
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ===== END XP SYSTEM =====
 
 // ===== AUTO-LOGIN =====
 (async function autoLogin(){
