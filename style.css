@@ -1423,7 +1423,6 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   color: var(--c2);
   margin-right: 4px;
   vertical-align: middle;
-  title: "Pendente de dia anterior";
 }
 
 /* ===== XP / GAMIFICATION CARD ===== */
