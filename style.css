@@ -322,8 +322,8 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
 .cal-day.today { background: var(--c5); color: white; }
 .cal-day.selected:not(.today) { background: var(--cal-hover); }
 .cal-day.other-month { color: var(--placeholder); }
-.cal-day .cal-dots { display: flex; justify-content: center; gap: 2px; margin-top: 2px; min-height: 5px; }
-.cal-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.cal-day .cal-dots { display: flex; justify-content: center; gap: 3px; margin-top: 3px; min-height: 10px; }
+.cal-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .cal-day.today .cal-dot { opacity: 0.85; }
 
 .cal-event-area {
@@ -339,13 +339,29 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   color: var(--text); outline: none; background: var(--input-bg);
 }
 .cal-event-input:focus { border-color: var(--c5); }
-.cal-event-meta { display: flex; align-items: center; gap: 6px; }
+/* title + time on same row */
+.cal-title-time-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.cal-title-time-row .cal-event-input {
+  flex: 1;
+  min-width: 0;
+}
 .cal-event-time {
-  border: 2px solid var(--cal-border); border-radius: 8px; padding: 5px 6px;
+  border: 2px solid var(--cal-border); border-radius: 8px; padding: 7px 6px;
   font-family: 'Nunito', sans-serif; font-size: 12px; color: var(--text);
-  outline: none; width: 90px; flex-shrink: 0; background: var(--input-bg);
+  outline: none; width: 88px; flex-shrink: 0; background: var(--input-bg);
 }
 .cal-event-time:focus { border-color: var(--c5); }
+
+/* relevance row standalone (full width, centered) */
+.cal-relevance-standalone {
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+}
 .cal-relevance-group { display: flex; gap: 5px; flex: 1; justify-content: center; }
 .rel-btn { width: 22px; height: 22px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
 .rel-green  { background: #6BCB77; }
@@ -799,6 +815,7 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
+  margin-top: 16px;
   margin-bottom: 6px;
 }
 .cal-collapse-btn:hover {
@@ -890,3 +907,216 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   transition: color 0.15s;
 }
 .reminder-banner-close:hover { color: var(--c1); }
+
+/* ===== CAL ADD BUTTON FULL WIDTH ===== */
+.cal-event-btn-full {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: var(--c5);
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+.cal-event-btn-full:hover { filter: brightness(1.1); transform: scale(1.01); }
+
+/* ===== EVENT SHARE BUTTON ===== */
+.cal-event-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.cal-event-share {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  padding: 1px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cal-event-item:hover .cal-event-share { opacity: 1; }
+.cal-event-share:hover { color: var(--c5); }
+.cal-event-share:disabled { cursor: default; }
+
+/* ===== SHARE TOAST ===== */
+.share-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  background: var(--card);
+  border: 2px solid var(--c5);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 20px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+  z-index: 99998;
+  transition: opacity 0.25s, transform 0.25s;
+  white-space: nowrap;
+}
+.share-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================
+   RESPONSIVIDADE MOBILE (max-width: 768px)
+   Layout: cards empilhados verticalmente
+   ============================================ */
+@media (max-width: 768px) {
+
+  /* ── NAV ── */
+  .nav {
+    padding: 0 12px;
+    height: 52px;
+  }
+  .nav-logo { font-size: 18px; }
+  .nav-tab  { padding: 6px 12px; font-size: 12px; }
+  .nav-user { max-width: 70px; font-size: 11px; }
+  .nav-time { display: none; }
+
+  /* ── PAGES ── */
+  .page.active { display: block; }
+
+  /* ── MAIN GRID → coluna única rolável ── */
+  .main-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100vh - 52px);
+  }
+
+  /* Colunas viram flex column normais */
+  .left-col, .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: visible;
+  }
+
+  /* Calendário sai da estrutura de colunas e fica no fluxo certo via order no main-grid */
+  .main-grid {
+    /* timer-card e tasks-card vêm da left-col (order 1)
+       calendar-card vem diretamente (order 2)
+       reminders + stats vêm da right-col (order 3) */
+  }
+  .left-col    { order: 1; }
+  .calendar-card { order: 2; }
+  .right-col   { order: 3; }
+
+  /* ── CARDS: altura automática no mobile ── */
+  .card {
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  /* Timer — sem altura fixa */
+  .timer-card { min-height: unset; }
+
+  /* Tasks — lista com altura limitada para não crescer demais */
+  .tasks-card { min-height: unset; max-height: 420px; }
+  .tasks-list { max-height: 180px; }
+
+  /* Agenda — altura generosa para caber grade + eventos */
+  .calendar-card {
+    min-height: unset;
+    max-height: none;
+  }
+  .cal-event-area  { max-height: 360px; }
+  .cal-events-list { max-height: 160px; }
+
+  /* Lembretes */
+  .reminders-card { min-height: unset; max-height: 320px; }
+  .reminder-list  { max-height: 140px; }
+
+  /* Stats — compacto */
+  .stats-card { padding: 12px; }
+
+  /* ── CALENDÁRIO: grid de dias menor ── */
+  .cal-day  { padding: 4px 1px; font-size: 11px; }
+  .cal-dot  { width: 8px; height: 8px; }
+  .cal-dots { gap: 2px; margin-top: 2px; }
+
+  /* Título + horário em coluna no mobile */
+  .cal-title-time-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cal-event-time { width: 100%; }
+
+  /* ── TIMER: display menor ── */
+  .timer-display { font-size: 32px; }
+
+  /* ── NOTAS: sidebar em cima, editor abaixo ── */
+  .notes-page  { padding: 10px; gap: 10px; height: calc(100vh - 52px); }
+  .notes-body  { flex-direction: column; }
+  .notes-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: 100px;
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+  .note-card-mini {
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+  .note-editor { flex: 1; min-height: 0; }
+
+  /* ── OVERLAYS: largura total no mobile ── */
+  .alert-box,
+  .invite-panel,
+  .event-alert-panel {
+    width: 94vw;
+    max-width: 94vw;
+    padding: 24px 20px;
+  }
+
+  /* ── LOGIN ── */
+  .login-box {
+    padding: 32px 24px;
+    width: 92vw;
+  }
+
+  /* ── REMINDER BANNER ── */
+  .reminder-banner {
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: unset;
+  }
+
+  /* ── SHARE TOAST ── */
+  .share-toast {
+    font-size: 12px;
+    padding: 9px 16px;
+    white-space: normal;
+    text-align: center;
+    width: 80vw;
+  }
+}

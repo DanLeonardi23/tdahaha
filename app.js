@@ -506,15 +506,83 @@ function renderCalEvents(){
       ? `<span class="ev-shared-tag">de ${e.sharedFrom}</span> ` : "";
     const timeHtml  = e.time ? `<div class="cal-event-time-tag">⏰ ${e.time}</div>` : "";
     const obsHtml   = e.obs  ? `<div class="cal-event-obs-text">${e.obs}</div>`  : "";
+
+    // Share button — only show if there is another user registered
+    const shareBtn = otherUser
+      ? `<button class="cal-event-share" title="Compartilhar com ${otherUser.username}">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+             <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+             <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+           </svg>
+         </button>`
+      : "";
+
     div.innerHTML =
       `<div class="cal-event-body">` +
         `<div class="cal-event-name">${bellIcon}${sharedTag}${e.text}</div>` +
         timeHtml + obsHtml +
       `</div>` +
-      `<button class="cal-event-del">✕</button>`;
+      `<div class="cal-event-actions">` +
+        shareBtn +
+        `<button class="cal-event-del">✕</button>` +
+      `</div>`;
+
+    if (otherUser) {
+      div.querySelector(".cal-event-share").addEventListener("click", () => shareExistingEvent(e, key));
+    }
     div.querySelector(".cal-event-del").addEventListener("click", () => deleteCalEvent(key, i));
     list.appendChild(div);
   });
+}
+
+async function shareExistingEvent(e, key) {
+  if (!otherUser) return;
+
+  // Visual feedback on the button
+  const btn = event.currentTarget;
+  btn.disabled = true;
+  btn.style.opacity = "0.5";
+
+  try {
+    await addDoc(collection(db,"invites"),{
+      fromUid:      currentUser.uid,
+      fromUsername: currentUser.username,
+      toUid:        otherUser.uid,
+      type:         "new",
+      status:       "pending",
+      event: {
+        text:      e.text,
+        time:      e.time      || "",
+        obs:       e.obs       || "",
+        relevance: e.relevance || "green",
+        notify:    e.notify    || false,
+        dateKey:   key
+      },
+      createdAt: serverTimestamp()
+    });
+
+    // Show a brief confirmation toast
+    showToast("📤 Enviado para " + otherUser.username + "!");
+  } catch(err) {
+    console.error("shareExistingEvent error:", err);
+    showToast("Erro ao compartilhar. Tente novamente.");
+    btn.disabled = false;
+    btn.style.opacity = "";
+  }
+}
+window.shareExistingEvent = shareExistingEvent;
+
+function showToast(msg) {
+  const existing = document.getElementById("share-toast");
+  if (existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.id = "share-toast";
+  toast.className = "share-toast";
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("visible"));
+  setTimeout(() => toast.remove(), 3000);
 }
 
 async function deleteCalEvent(key,idx){
