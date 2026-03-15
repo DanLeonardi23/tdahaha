@@ -110,8 +110,7 @@ function resetAppState() {
   calEvents    = {};
 
   // Tasks
-  tasks        = [];
-  totalDone    = 0;
+  tasks = [];
   renderTasks();
 
   // Reminders
@@ -167,7 +166,6 @@ async function startApp() {
   // (handles switching users on same browser)
   calEvents       = {};
   tasks           = [];
-  totalDone       = 0;
   reminders       = [];
   remColorIdx     = 0;
   notes           = [];
@@ -526,7 +524,7 @@ window.resetTimer=resetTimer;window.toggleMute=toggleMute;window.closeTimerAlert
 
 // ===== TASKS (local) =====
 // ===== TASKS (Firestore, per day) =====
-let tasks=[], totalDone=0;
+let tasks=[];
 
 function getSelectedDateKey() {
   const y = calDate.getFullYear();
@@ -583,12 +581,13 @@ function renderTasks() {
     list.appendChild(div);
   });
 
-  document.getElementById("stat-tasks").textContent = totalDone;
+  // Live count: tasks marked done in the current day view
+  const doneCount = getTasksForDay(dateKey).filter(t => t.done).length;
+  document.getElementById("stat-tasks").textContent = doneCount;
 }
 
 async function loadTasks() {
   tasks = [];
-  totalDone = 0;
   const q = query(collection(db,"tasks"), where("ownerUid","==",currentUser.uid));
   const snap = await getDocs(q);
   snap.forEach(d => tasks.push({ ...d.data(), firestoreId: d.id, id: d.id }));
@@ -600,7 +599,8 @@ function toggleTask(id) {
   if (!t) return;
   const was = t.done;
   t.done = !t.done;
-  if (!was && t.done) { totalDone++; addXp("task_done"); }
+  // XP only when checking (not unchecking)
+  if (!was && t.done) addXp("task_done");
   if (t.firestoreId) {
     updateDoc(doc(db,"tasks",t.firestoreId), { done: t.done }).catch(console.error);
   }
