@@ -133,6 +133,9 @@ async function startApp() {
   // Init all local modules
   initLocalModules();
 
+  // Request notification permission
+  await requestNotificationPermission();
+
   // Check day-before alerts
   checkEventAlerts();
 }
@@ -305,9 +308,13 @@ window.showPage = showPage;
 
 function updateClock() {
   const now = new Date();
-  document.getElementById("clock").textContent =
-    now.getHours().toString().padStart(2,"0") + ":" +
-    now.getMinutes().toString().padStart(2,"0");
+  const hh = now.getHours().toString().padStart(2,"0");
+  const mm = now.getMinutes().toString().padStart(2,"0");
+  document.getElementById("clock").textContent = hh + ":" + mm;
+  // Check reminder alerts every minute (when seconds = 0)
+  if (now.getSeconds() === 0 && currentUser) {
+    checkReminderAlerts(hh + ":" + mm);
+  }
 }
 updateClock();
 setInterval(updateClock, 1000);
@@ -461,38 +468,25 @@ function changeMonth(dir){calDate=new Date(calDate.getFullYear(),calDate.getMont
 window.selectDay=selectDay;window.changeMonth=changeMonth;
 
 function toggleCalEvents() {
-  const card   = document.querySelector('.calendar-card');
-  const grid   = document.getElementById('cal-grid');
-  const header = document.querySelector('.cal-header');
-  const addBlock = document.querySelector('.cal-add-block');
-  const icon   = document.getElementById('cal-collapse-icon');
-
+  const card  = document.querySelector('.calendar-card');
+  const icon  = document.getElementById('cal-collapse-icon');
+  const label = document.getElementById('cal-collapse-label');
   const isMin = card.classList.toggle('cal-minimized');
-
-  // minimized = hide grid + header nav + input form, show only events list
-  grid.style.display     = isMin ? 'none' : '';
-  addBlock.style.display = isMin ? 'none' : '';
-  // hide nav arrows but keep month label + collapse btn
-  header.querySelectorAll('.cal-nav').forEach(b => b.style.display = isMin ? 'none' : '');
-
   icon.style.transform = isMin ? 'rotate(180deg)' : 'rotate(0deg)';
+  label.textContent = isMin ? 'Mostrar formulário' : 'Ocultar formulário';
   localStorage.setItem('tdahaha-cal-minimized', isMin ? '1' : '0');
 }
 window.toggleCalEvents = toggleCalEvents;
 
 function restoreCalState() {
   if (localStorage.getItem('tdahaha-cal-minimized') === '1') {
-    const card     = document.querySelector('.calendar-card');
-    const grid     = document.getElementById('cal-grid');
-    const header   = document.querySelector('.cal-header');
-    const addBlock = document.querySelector('.cal-add-block');
-    const icon     = document.getElementById('cal-collapse-icon');
+    const card  = document.querySelector('.calendar-card');
+    const icon  = document.getElementById('cal-collapse-icon');
+    const label = document.getElementById('cal-collapse-label');
     if (!card) return;
     card.classList.add('cal-minimized');
-    grid.style.display     = 'none';
-    addBlock.style.display = 'none';
-    header.querySelectorAll('.cal-nav').forEach(b => b.style.display = 'none');
-    icon.style.transform   = 'rotate(180deg)';
+    icon.style.transform = 'rotate(180deg)';
+    if (label) label.textContent = 'Mostrar formulário';
   }
 }
 
@@ -608,6 +602,7 @@ let reminders=[],remColorIdx=0;
 const reminderColors=["#6BCB77","#4D96FF","#FF6B6B","#C77DFF","#FFD93D"];
 
 function renderReminders(){
+  scheduleReminderAlerts();
   const list = document.getElementById("reminder-list");
   list.innerHTML = "";
   reminders.forEach(r => {
@@ -633,6 +628,111 @@ function addReminder(){
   renderReminders();
 }
 window.deleteReminder=deleteReminder;window.addReminder=addReminder;
+
+// ===== REMINDER ALERTS =====
+let scheduledTimers = {}; // reminderId -> timeoutId
+
+async function requestNotificationPermission() {
+  if (!("Notification" in window)) return false;
+
+  // Register service worker
+  if ("serviceWorker" in navigator) {
+    try {
+      await navigator.serviceWorker.register("/sw.js");
+    } catch(err) {
+      console.warn("[SW] registration failed:", err);
+    }
+  }
+
+  if (Notification.permission === "granted") return true;
+  if (Notification.permission === "denied") return false;
+  const result = await Notification.requestPermission();
+  return result === "granted";
+}
+
+// Called whenever reminders change — schedules a timeout for each future reminder
+function scheduleReminderAlerts() {
+  // Clear all existing timers
+  Object.values(scheduledTimers).forEach(t => clearTimeout(t));
+  scheduledTimers = {};
+
+  if (Notification.permission !== "granted") return;
+
+  const now = new Date();
+
+  reminders.forEach(r => {
+    if (!r.time) return;
+    const [hh, mm] = r.time.split(":").map(Number);
+    const fireAt = new Date();
+    fireAt.setHours(hh, mm, 0, 0);
+
+    // If time already passed today, skip
+    if (fireAt <= now) return;
+
+    const msUntil = fireAt - now;
+    scheduledTimers[r.id] = setTimeout(() => {
+      triggerReminderAlert(r);
+    }, msUntil);
+  });
+}
+
+// Kept for backwards compat (called by updateClock every minute)
+function checkReminderAlerts(currentTime) {
+  // No-op — scheduling is handled by scheduleReminderAlerts()
+}
+
+function triggerReminderAlert(r) {
+  // In-app banner (always)
+  showReminderBanner(r);
+
+  // System notification via SW
+  if (Notification.permission === "granted") {
+    const body = r.time ? r.time + " — " + r.text : r.text;
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification("⏰ Lembrete — TDAHAHA", {
+        body,
+        icon:     "/icon-192.png",
+        badge:    "/icon-192.png",
+        tag:      "reminder-" + r.id,
+        renotify: true,
+        vibrate:  [200, 100, 200],
+      });
+    }).catch(() => {
+      new Notification("⏰ Lembrete — TDAHAHA", { body, icon: "/icon-192.png" });
+    });
+  }
+}
+
+function showReminderBanner(r) {
+  // Remove any existing banner
+  const existing = document.getElementById("reminder-banner");
+  if (existing) existing.remove();
+
+  const banner = document.createElement("div");
+  banner.id = "reminder-banner";
+  banner.className = "reminder-banner";
+  banner.innerHTML =
+    `<div class="reminder-banner-icon">⏰</div>` +
+    `<div class="reminder-banner-body">` +
+      `<div class="reminder-banner-title">Lembrete!</div>` +
+      `<div class="reminder-banner-text">${r.text}</div>` +
+      `${r.time ? `<div class="reminder-banner-time">${r.time}</div>` : ""}` +
+    `</div>` +
+    `<button class="reminder-banner-close" id="reminder-banner-close">✕</button>`;
+
+  document.body.appendChild(banner);
+
+  // Auto close after 8 seconds
+  const timer = setTimeout(() => banner.remove(), 8000);
+
+  document.getElementById("reminder-banner-close").addEventListener("click", () => {
+    clearTimeout(timer);
+    banner.remove();
+  });
+
+  // Animate in
+  requestAnimationFrame(() => banner.classList.add("visible"));
+}
 
 // ===== NOTES (local) =====
 let notes=[],currentNoteId=null;
@@ -695,7 +795,7 @@ function initLocalModules(){
 
   const savedRem = localStorage.getItem("tdahaha-reminders-"+uid);
   reminders = savedRem ? JSON.parse(savedRem) : [];
-  renderReminders();
+  renderReminders(); // scheduleReminderAlerts() is called inside renderReminders
 
   const savedNotes = localStorage.getItem("tdahaha-notes-"+uid);
   notes = savedNotes ? JSON.parse(savedNotes) : [];

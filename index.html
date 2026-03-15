@@ -6,10 +6,17 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TDAHAHA</title>
+  <title>TDAHAHA!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="theme-color" content="#C77DFF" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="TDAHAHA" />
 </head>
 <body>
 
@@ -138,9 +145,6 @@
           <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
           <div class="cal-month" id="cal-month-label"></div>
           <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
-          <button class="cal-collapse-btn" id="cal-collapse-btn" onclick="toggleCalEvents()" title="Minimizar painel de eventos">
-            <svg id="cal-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-          </button>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
         <div class="cal-event-area" id="cal-event-area">
@@ -170,6 +174,10 @@
               </label>
             </div>
           </div>
+          <button class="cal-collapse-btn" id="cal-collapse-btn" onclick="toggleCalEvents()" title="Minimizar formulário">
+            <svg id="cal-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+            <span id="cal-collapse-label">Ocultar formulário</span>
+          </button>
           <div class="cal-events-list" id="cal-events-list"></div>
         </div>
       </div>
