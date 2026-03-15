@@ -170,6 +170,7 @@ body {
 .nav-tab.notes-tab.active { background: var(--c3); border-color: var(--c3); }
 
 .nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-mobile-row { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: space-between; }
 .nav-time { font-size: 13px; color: var(--muted); font-weight: 600; }
 
 /* ===== THEME TOGGLE ===== */
@@ -1059,48 +1060,85 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   transform: translateX(-50%) translateY(0);
 }
 
-/* ============================================
-   RESPONSIVIDADE MOBILE (max-width: 768px)
-   Layout: cards empilhados verticalmente
-   ============================================ */
 /* ============================================================
-   RESPONSIVIDADE MOBILE  ≤ 768px
+   MOBILE  ≤ 768px  —  layout de card único empilhado
    ============================================================ */
 @media (max-width: 768px) {
 
-  /* ── NAV ── */
-  .nav         { height: 52px; }
-  .nav-inner   { padding: 0 16px; width: 100%; }
-  .nav-logo    { font-size: 18px; }
-  .nav-tab     { padding: 6px 11px; font-size: 12px; }
-  .nav-user    { max-width: 72px; font-size: 11px; }
-  .nav-time    { display: none; }
+  /* ── APP SHELL ── */
+  .app { height: 100%; min-height: 100dvh; }
+
+  /* ── LOGO ACIMA DO NAV ── */
+  .nav {
+    height: auto;
+    flex-direction: column;
+    padding: 10px 16px 8px;
+    gap: 6px;
+    align-items: stretch;
+  }
+  .nav-inner {
+    width: 100%;
+    padding: 0;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+  }
+
+  /* Logo centralizado no topo */
+  .nav-logo {
+    font-size: 22px;
+    text-align: center;
+    letter-spacing: 2px;
+  }
+
+  /* Tabs + ações na mesma linha abaixo do logo */
+  .nav-tabs {
+    flex: 1;
+    justify-content: center;
+    gap: 8px;
+  }
+  .nav-tab   { padding: 7px 14px; font-size: 13px; }
+  .nav-right { gap: 8px; justify-content: flex-end; }
+  .nav-time  { display: none; }          /* sem relógio no mobile */
+  .nav-user  { max-width: 80px; font-size: 11px; }
+
+  /* Row: tabs à esquerda, ações à direita */
+  .nav-mobile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
 
   /* ── PAGES ── */
-  .page.active { display: block; }
+  .page { overflow: hidden; }
+  .page.active { display: flex; flex-direction: column; }
 
   /* ── MAIN GRID → coluna única rolável ── */
   .main-grid {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    padding: 14px 16px;   /* margem lateral generosa */
+    padding: 14px 16px 20px;
     overflow-y: auto;
     overflow-x: hidden;
-    height: calc(100vh - 52px - 33px);
+    flex: 1;
     max-width: 100%;
     margin: 0;
+    height: auto;
+    min-height: 0;
   }
 
-  /* Colunas: stacking normal */
+  /* Colunas: flex normal, sem overflow oculto */
   .left-col, .right-col {
     display: flex;
     flex-direction: column;
     gap: 14px;
     overflow: visible;
+    min-height: unset;
   }
 
-  /* Ordem: timer → tasks → agenda → reminders → stats */
+  /* Ordem: timer → tasks → agenda → lembretes → xp */
   .left-col      { order: 1; }
   .calendar-card { order: 2; }
   .right-col     { order: 3; }
@@ -1109,168 +1147,134 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   .card {
     width: 100%;
     flex-shrink: 0;
+    flex: unset;
     padding: 16px;
     border-radius: 14px;
+    overflow: visible;
+    max-height: none;
+    min-height: unset;
   }
-  .card-title { margin-bottom: 14px; }
+  .card-title { margin-bottom: 12px; }
 
   /* ── TIMER ── */
-  .timer-card     { min-height: unset; }
-  .timer-display  { font-size: 34px; margin: 10px 0 14px; }
-  .timer-presets  { gap: 6px; margin-bottom: 10px; }
-  .preset-btn     { padding: 8px 4px; font-size: 12px; }
-  .timer-set-row  { gap: 8px; margin-bottom: 10px; }
+  .timer-display   { font-size: 34px; margin: 10px 0 12px; }
+  .timer-presets   { gap: 6px; margin-bottom: 10px; }
+  .preset-btn      { padding: 8px 4px; font-size: 12px; }
+  .timer-set-row   { gap: 8px; margin-bottom: 10px; }
   .timer-set-input { font-size: 17px; padding: 9px 0; }
-  .timer-btns     { gap: 10px; }
-  .timer-btn      { padding: 12px; font-size: 15px; }
-  .timer-label    { margin-top: 10px; }
+  .timer-btns      { gap: 10px; }
+  .timer-btn       { padding: 12px; font-size: 15px; }
+  .timer-label     { margin-top: 10px; }
 
   /* ── TASKS ── */
-  .tasks-card       { min-height: unset; max-height: none; }
-  .task-input-row   { gap: 8px; margin-bottom: 2px; }
-  .task-input       { padding: 10px 12px; font-size: 14px; }
-  .task-add-confirm { padding: 10px 16px; }
-  .tasks-list       { max-height: 200px; margin: 10px 0; }
-  .task-item        { padding: 9px 6px; gap: 10px; }
-  .task-text        { font-size: 14px; }
-  .tasks-done-bar   { padding: 10px 12px; margin-top: 6px; }
-  .tasks-clear-btn  { padding: 9px; margin-top: 8px; }
+  .tasks-card      { flex: unset; max-height: none; min-height: unset; }
+  .task-input      { padding: 10px 12px; font-size: 14px; }
+  .task-input-row  { gap: 8px; margin-bottom: 4px; }
+  .tasks-list      { max-height: 200px; margin: 10px 0; }
+  .task-item       { padding: 9px 6px; gap: 10px; }
+  .task-text       { font-size: 14px; }
+  .tasks-done-bar  { padding: 10px 12px; margin-top: 6px; }
+  .tasks-clear-btn { padding: 9px; margin-top: 8px; }
 
   /* ── CALENDÁRIO ── */
-  .calendar-card  { min-height: unset; max-height: none; }
+  .calendar-card  { flex: unset; max-height: none; }
   .cal-header     { margin-bottom: 10px; }
   .cal-month      { font-size: 16px; }
   .cal-nav        { width: 30px; height: 30px; }
-  .cal-day        { padding: 5px 2px; font-size: 12px; }
-  .cal-dot        { width: 8px; height: 8px; }
-  .cal-dots       { gap: 2px; margin-top: 3px; }
-  .cal-event-area { max-height: none; padding-top: 12px; margin-top: 12px; }
+  .cal-day        { width: 32px; height: 40px; font-size: 11px; }
+  .cal-dot        { width: 7px; height: 7px; }
+  .cal-event-area { padding-top: 12px; margin-top: 12px; max-height: none; }
   .cal-add-block  { gap: 8px; }
-
-  /* título + horário em coluna */
-  .cal-title-time-row { flex-direction: column; gap: 8px; }
-  .cal-event-time     { width: 100%; padding: 9px 10px; }
-  .cal-event-input    { padding: 9px 10px; font-size: 14px; }
-  .cal-event-obs      { font-size: 13px; }
-  .cal-options-row    { gap: 6px; margin-top: 2px; }
-  .cal-notify-row     { padding: 6px 4px; gap: 10px; }
-  .cal-notify-label   { font-size: 13px; }
-  .cal-event-btn-full { padding: 12px; font-size: 15px; margin-top: 12px; }
-  .cal-collapse-btn   { margin-top: 14px; padding: 8px 10px; }
-  .cal-events-list    { max-height: 220px; gap: 8px; margin-top: 10px; }
-  .cal-event-item     { padding: 10px 12px; gap: 10px; }
-  .cal-event-name     { font-size: 14px; }
+  .cal-title-time-row   { flex-direction: column; gap: 8px; }
+  .cal-event-time       { width: 100%; padding: 9px 10px; }
+  .cal-event-input      { padding: 9px 10px; font-size: 14px; }
+  .cal-event-obs        { font-size: 13px; }
+  .cal-options-row      { gap: 6px; margin-top: 4px; }
+  .cal-notify-row       { padding: 6px 4px; gap: 10px; }
+  .cal-notify-label     { font-size: 13px; }
+  .cal-event-btn-full   { padding: 12px 20px; font-size: 15px; margin-top: 12px; }
+  .cal-collapse-btn     { margin-top: 14px; padding: 8px 10px; }
+  .cal-events-list      { max-height: 240px; gap: 8px; margin-top: 10px; }
+  .cal-event-item       { padding: 10px 12px; gap: 10px; }
+  .cal-event-name       { font-size: 14px; }
 
   /* ── LEMBRETES ── */
-  .reminders-card    { min-height: unset; max-height: none; }
-  .reminders-header  { margin-bottom: 10px; }
+  .reminders-card     { flex: unset; max-height: none; min-height: unset; }
+  .reminders-header   { margin-bottom: 10px; }
   .reminder-input-row { gap: 8px; }
-  .reminder-inputs   { gap: 8px; }
-  .reminder-input    { padding: 9px 10px; font-size: 14px; }
-  .reminder-time-input { padding: 9px 8px; }
-  .reminder-add-btn  { padding: 9px 14px; font-size: 14px; }
-  .reminder-list     { max-height: 160px; margin-top: 10px; }
-  .reminder-item     { padding: 8px 6px; gap: 10px; }
-  .reminder-text     { font-size: 13px; }
+  .reminder-inputs    { gap: 8px; }
+  .reminder-input     { padding: 9px 10px; font-size: 14px; }
+  .reminder-time-input{ padding: 9px 8px; }
+  .reminder-add-btn   { padding: 9px 14px; font-size: 14px; }
+  .reminder-list      { max-height: 160px; margin-top: 10px; }
+  .reminder-item      { padding: 8px 6px; gap: 10px; }
+  .reminder-text      { font-size: 13px; }
+  .reminders-done-bar { padding: 10px 12px; margin-top: 8px; }
 
-  /* ── STATS ── */
-  .stats-card  { padding: 14px; }
-  .stat-box    { padding: 12px; }
-  .stat-number { font-size: 24px; }
+  /* ── XP DASHBOARD ── */
+  .xp-card        { flex: unset; flex-shrink: 0; }
+  .xp-stats-row   { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .xp-stat        { padding: 7px 3px; }
+  .xp-stat-num    { font-size: 18px; }
+  .xp-stat-lbl    { font-size: 8px; }
+  .xp-level-name  { font-size: 15px; }
+  .xp-level-badge { font-size: 24px; }
 
   /* ── NOTAS ── */
   .notes-page {
-    padding: 14px 16px;
+    padding: 14px 16px 20px;
     gap: 12px;
-    height: calc(100vh - 52px - 33px);
+    flex: 1;
     max-width: 100%;
+    overflow: hidden;
   }
-  .notes-header { margin-bottom: 4px; }
-  .notes-body   { flex-direction: column; gap: 12px; }
+  .notes-header     { margin-bottom: 4px; flex-shrink: 0; }
+  .notes-body       { flex-direction: column; gap: 12px; flex: 1; overflow: hidden; }
   .notes-sidebar {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-height: 110px;
-    gap: 10px;
-    padding-bottom: 6px;
+    width: 100%; flex-shrink: 0;
+    display: flex; flex-direction: row;
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+    max-height: 110px; gap: 10px; padding-bottom: 6px;
   }
-  .note-card-mini {
-    min-width: 150px;
-    flex-shrink: 0;
-    padding: 10px 12px;
-  }
-  .note-editor       { flex: 1; min-height: 0; padding: 14px; }
-  .note-title-input  { font-size: 20px; padding-bottom: 10px; }
+  .note-card-mini     { min-width: 150px; flex-shrink: 0; padding: 10px 12px; }
+  .note-editor        { flex: 1; min-height: 0; padding: 14px; }
+  .note-title-input   { font-size: 20px; padding-bottom: 10px; }
   .note-content-input { font-size: 14px; }
-  .note-footer       { padding-top: 10px; flex-wrap: wrap; gap: 8px; }
-  .note-actions      { gap: 8px; }
+  .note-footer        { padding-top: 10px; flex-wrap: wrap; gap: 8px; }
+  .note-actions       { gap: 8px; }
   .note-save-btn,
-  .note-del-btn      { padding: 9px 16px; font-size: 13px; }
-  .note-share-btn    { padding: 8px 12px; font-size: 12px; }
+  .note-del-btn       { padding: 9px 16px; font-size: 13px; }
+  .note-share-btn     { padding: 8px 12px; font-size: 12px; }
 
   /* ── OVERLAYS ── */
-  .alert-box,
-  .invite-panel,
-  .event-alert-panel {
-    width: 92vw;
-    max-width: 92vw;
-    padding: 24px 20px;
-    border-radius: 18px;
+  .alert-box, .invite-panel, .event-alert-panel {
+    width: 92vw; max-width: 92vw;
+    padding: 24px 20px; border-radius: 18px;
   }
-  .invite-panel-list { padding: 12px 14px; }
-  .invite-card       { padding: 14px; gap: 10px; }
+  .invite-panel-list  { padding: 12px 14px; }
+  .invite-card        { padding: 14px; gap: 10px; }
   .invite-accept-btn,
-  .invite-reject-btn { padding: 10px; font-size: 14px; }
+  .invite-reject-btn  { padding: 10px; font-size: 14px; }
 
   /* ── LOGIN ── */
-  .login-box   { padding: 32px 20px; width: 92vw; }
-  .login-input { padding: 11px 14px; font-size: 15px; }
-  .login-btn   { padding: 13px; font-size: 15px; }
+  .login-box          { padding: 32px 20px; width: 92vw; }
+  .login-input        { padding: 11px 14px; font-size: 15px; }
+  .login-btn          { padding: 13px; font-size: 15px; }
 
   /* ── REMINDER BANNER ── */
   .reminder-banner {
-    bottom: 14px;
-    right: 14px;
-    left: 14px;
-    width: auto;
-    max-width: unset;
-    padding: 14px 16px;
-    gap: 12px;
+    bottom: 14px; right: 14px; left: 14px;
+    width: auto; max-width: unset; padding: 14px 16px; gap: 12px;
   }
 
-  /* ── SHARE TOAST ── */
+  /* ── TOASTS ── */
   .share-toast {
-    font-size: 12px;
-    padding: 10px 18px;
-    white-space: normal;
-    text-align: center;
-    width: 78vw;
+    font-size: 12px; padding: 10px 18px;
+    white-space: normal; text-align: center; width: 78vw;
   }
 
   /* ── FOOTER ── */
   .app-footer { font-size: 10px; padding: 7px 16px; }
-}
-
-/* ===== FOOTER ===== */
-.app-footer {
-  flex-shrink: 0;
-  text-align: center;
-  padding: 8px 16px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  letter-spacing: 0.5px;
-  border-top: 1px solid var(--border);
-  background: var(--card);
-  transition: background 0.3s, border-color 0.3s;
-}
-
-.app-footer span {
-  color: var(--c5);
 }
 
 
@@ -1577,11 +1581,3 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
 .levelup-name  { font-family: 'Fredoka One', sans-serif; font-size: 20px; line-height: 1.1; }
 
 /* ===== XP CARD MOBILE ===== */
-@media (max-width: 768px) {
-  .xp-stats-row { grid-template-columns: repeat(4, 1fr); gap: 5px; }
-  .xp-stat      { padding: 7px 3px; }
-  .xp-stat-num  { font-size: 18px; }
-  .xp-stat-lbl  { font-size: 8px; }
-  .xp-level-name { font-size: 15px; }
-  .xp-level-badge { font-size: 24px; }
-}
