@@ -103,19 +103,71 @@ async function doRegister() {
 }
 window.doRegister = doRegister;
 
+function resetAppState() {
+  // Clear ALL in-memory state so switching users is clean
+  currentUser  = null;
+  otherUser    = null;
+  calEvents    = {};
+
+  // Tasks
+  tasks        = [];
+  totalDone    = 0;
+
+  // Reminders
+  reminders    = [];
+  remColorIdx  = 0;
+  Object.values(scheduledTimers).forEach(t => clearTimeout(t));
+  scheduledTimers = {};
+
+  // Notes
+  notes           = [];
+  currentNoteId   = null;
+
+  // Invites listeners
+  if (unsubInvites)     { unsubInvites();     unsubInvites     = null; }
+  if (unsubNoteInvites) { unsubNoteInvites(); unsubNoteInvites = null; }
+  pendingInvitesCache = {};
+
+  // Reset notes UI
+  const emptyNotes = document.getElementById("empty-notes");
+  if (emptyNotes) emptyNotes.style.display = "flex";
+  ["note-title","note-content"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = "none"; el.value = ""; }
+  });
+  const noteFooter = document.getElementById("note-footer");
+  if (noteFooter) noteFooter.style.display = "none";
+
+  // Reset calendar
+  calDate     = new Date(); calDate.setDate(1);
+  selectedDay = new Date().getDate();
+}
+
 async function doLogout() {
   localStorage.removeItem("tdahaha-session");
-  if (unsubInvites) unsubInvites();
-  currentUser = null;
-  otherUser   = null;
-  calEvents   = {};
+  resetAppState();
   document.getElementById("main-app").style.display = "none";
   document.getElementById("login-screen").style.display = "flex";
+  // Clear login fields
+  document.getElementById("login-username").value = "";
+  document.getElementById("login-password").value = "";
+  document.getElementById("login-error").textContent = "";
 }
 window.doLogout = doLogout;
 
 // ===== APP START =====
 async function startApp() {
+  // Reset all module state before loading new user's data
+  // (handles switching users on same browser)
+  calEvents       = {};
+  tasks           = [];
+  totalDone       = 0;
+  reminders       = [];
+  remColorIdx     = 0;
+  notes           = [];
+  currentNoteId   = null;
+  pendingInvitesCache = {};
+
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("register-screen").style.display = "none";
   document.getElementById("main-app").style.display = "flex";
@@ -861,7 +913,7 @@ async function loadNotes() {
   notes = [];
   const q = query(collection(db,"notes"), where("ownerUid","==",currentUser.uid));
   const snap = await getDocs(q);
-  snap.forEach(d => notes.push({ ...d.data(), firestoreId: d.id }));
+  snap.forEach(d => notes.push({ ...d.data(), firestoreId: d.id, id: d.id }));
   // Sort by createdAt desc
   notes.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
   renderNotesSidebar();
@@ -942,6 +994,7 @@ async function saveNote(){
     noteData.createdAt = serverTimestamp();
     const ref = await addDoc(collection(db,"notes"), noteData);
     n.firestoreId = ref.id;
+    n.id = ref.id;  // keep id in sync with firestoreId
   }
 
   renderNotesSidebar();
@@ -951,17 +1004,38 @@ async function saveNote(){
 async function deleteNote(){
   if (!confirm("Apagar esta ideia?")) return;
   const n = notes.find(n => n.id === currentNoteId);
-  if (n?.firestoreId) {
-    const { deleteDoc: _del } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await _del(doc(db,"notes", n.firestoreId));
+  if (!n) return;
+
+  if (n.firestoreId) {
+    try {
+      const { deleteDoc: _del } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      await _del(doc(db,"notes", n.firestoreId));
+    } catch(err) {
+      console.error("deleteNote Firestore error:", err);
+      showToast("Erro ao apagar. Tente novamente.");
+      return;
+    }
   }
-  notes = notes.filter(n => n.id !== currentNoteId);
+
+  // Remove only this specific note by firestoreId or local id
+  // Remove by firestoreId when available, fallback to local id
+  const removeId = n.firestoreId || String(n.id);
+  notes = notes.filter(note =>
+    (note.firestoreId || String(note.id)) !== removeId
+  );
   currentNoteId = null;
+
+  // Reset editor UI
   document.getElementById("empty-notes").style.display = "flex";
-  ["note-title","note-content"].forEach(id => document.getElementById(id).style.display = "none");
+  ["note-title","note-content"].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.display = "none";
+    el.value = "";
+  });
   document.getElementById("note-footer").style.display = "none";
   const badge = document.getElementById("note-shared-badge");
   if (badge) badge.style.display = "none";
+
   renderNotesSidebar();
 }
 
@@ -1012,7 +1086,7 @@ async function respondNoteInvite(inviteId, status) {
         createdAt:  serverTimestamp()
       };
       const ref = await addDoc(collection(db,"notes"), noteData);
-      notes.unshift({ ...noteData, id: Date.now(), firestoreId: ref.id });
+      notes.unshift({ ...noteData, id: ref.id, firestoreId: ref.id });
       renderNotesSidebar();
       showToast("💡 Ideia adicionada às suas notas!");
     }
