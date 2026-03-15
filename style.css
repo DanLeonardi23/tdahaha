@@ -170,7 +170,7 @@ body {
 .nav-tab.notes-tab.active { background: var(--c3); border-color: var(--c3); }
 
 .nav-right { display: flex; align-items: center; gap: 10px; }
-.nav-mobile-row { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: space-between; }
+.nav-mobile-row { display: contents; } /* desktop: transparent wrapper */
 .nav-time { font-size: 13px; color: var(--muted); font-weight: 600; }
 
 /* ===== THEME TOGGLE ===== */
@@ -1059,6 +1059,22 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+
+/* ===== FOOTER ===== */
+.app-footer {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 8px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  transition: background 0.3s, border-color 0.3s;
+}
+.app-footer span { color: var(--c5); }
 
 /* ============================================================
    MOBILE  ≤ 768px  —  layout de card único empilhado
