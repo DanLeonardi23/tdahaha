@@ -1373,3 +1373,14 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   transition: all 0.15s;
 }
 .confirm-modal-ok:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+/* ===== CARRY-OVER TAG (tasks/reminders from past days) ===== */
+.carry-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--c2);
+  margin-right: 4px;
+  vertical-align: middle;
+  title: "Pendente de dia anterior";
+}

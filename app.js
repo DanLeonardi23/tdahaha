@@ -112,10 +112,12 @@ function resetAppState() {
   // Tasks
   tasks        = [];
   totalDone    = 0;
+  renderTasks();
 
   // Reminders
   reminders    = [];
   remColorIdx  = 0;
+  renderReminders();
   Object.values(scheduledTimers).forEach(t => clearTimeout(t));
   scheduledTimers = {};
 
@@ -188,7 +190,9 @@ async function startApp() {
   // Request notification permission
   await requestNotificationPermission();
 
-  // Load notes from Firestore
+  // Load tasks, reminders and notes from Firestore
+  await loadTasks();
+  await loadReminders();
   await loadNotes();
   await checkNoteInvites();
 
@@ -495,28 +499,122 @@ window.setTimerFromInput=setTimerFromInput;window.applyPreset=applyPreset;window
 window.resetTimer=resetTimer;window.toggleMute=toggleMute;window.closeTimerAlert=closeTimerAlert;
 
 // ===== TASKS (local) =====
-let tasks=[],totalDone=0;
-function renderTasks(){
-  const list = document.getElementById("tasks-list");
+// ===== TASKS (Firestore, per day) =====
+let tasks=[], totalDone=0;
+
+function getSelectedDateKey() {
+  const y = calDate.getFullYear();
+  const m = calDate.getMonth() + 1;
+  return y + "-" + m + "-" + selectedDay;
+}
+
+function getTodayKey() {
+  const t = new Date();
+  return t.getFullYear() + "-" + (t.getMonth()+1) + "-" + t.getDate();
+}
+
+function getTasksForDay(dateKey) {
+  const todayKey = getTodayKey();
+  return tasks.filter(t => {
+    // Show tasks created on this day
+    if (t.dateKey === dateKey) return true;
+    // Show incomplete tasks from past days on today's view
+    if (dateKey === todayKey && !t.done && t.dateKey < todayKey) return true;
+    return false;
+  });
+}
+
+function renderTasks() {
+  const dateKey   = getSelectedDateKey();
+  const todayKey  = getTodayKey();
+  const dayTasks  = getTasksForDay(dateKey);
+  const list      = document.getElementById("tasks-list");
+  const titleEl   = document.querySelector(".tasks-header .card-title");
+
+  // Update card title with selected date
+  if (titleEl) {
+    if (dateKey === todayKey) {
+      titleEl.textContent = "Tarefas — Hoje";
+    } else {
+      const [y,m,d] = dateKey.split("-");
+      titleEl.textContent = "Tarefas — " + d.padStart(2,"0") + "/" + m.padStart(2,"0");
+    }
+  }
+
   list.innerHTML = "";
-  tasks.forEach(t => {
+  dayTasks.forEach(t => {
     const div = document.createElement("div");
     div.className = "task-item";
+    // Show "carry-over" badge for incomplete tasks from past days
+    const carryTag = (!t.done && t.dateKey < todayKey && dateKey === todayKey)
+      ? `<span class="carry-tag" title="Pendente de dia anterior">↩</span>` : "";
     div.innerHTML =
       `<input type="checkbox" class="task-check" ${t.done?"checked":""}/>` +
-      `<span class="task-text ${t.done?"done":""}">${t.text}</span>` +
+      `<span class="task-text ${t.done?"done":""}">${carryTag}${t.text}</span>` +
       `<button class="task-del">✕</button>`;
     div.querySelector(".task-check").addEventListener("change", () => toggleTask(t.id));
     div.querySelector(".task-del").addEventListener("click",   () => deleteTask(t.id));
     list.appendChild(div);
   });
-  document.getElementById("stat-tasks").textContent=totalDone;
-  localStorage.setItem("tdahaha-tasks-"+currentUser?.uid, JSON.stringify({tasks,totalDone}));
+
+  document.getElementById("stat-tasks").textContent = totalDone;
 }
-function toggleTask(id){const t=tasks.find(t=>t.id===id);if(!t)return;const was=t.done;t.done=!t.done;if(!was&&t.done)totalDone++;renderTasks();}
-function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);renderTasks();}
-function addTask(){const inp=document.getElementById("task-input"),text=inp.value.trim();if(!text)return;tasks.push({id:Date.now(),text,done:false});inp.value="";renderTasks();}
-function clearDoneTasks(){tasks=tasks.filter(t=>!t.done);renderTasks();}
+
+async function loadTasks() {
+  tasks = [];
+  totalDone = 0;
+  const q = query(collection(db,"tasks"), where("ownerUid","==",currentUser.uid));
+  const snap = await getDocs(q);
+  snap.forEach(d => tasks.push({ ...d.data(), firestoreId: d.id, id: d.id }));
+  renderTasks();
+}
+
+function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  const was = t.done;
+  t.done = !t.done;
+  if (!was && t.done) totalDone++;
+  if (t.firestoreId) {
+    updateDoc(doc(db,"tasks",t.firestoreId), { done: t.done }).catch(console.error);
+  }
+  renderTasks();
+}
+
+function deleteTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t?.firestoreId) {
+    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
+      .then(({deleteDoc:_d}) => _d(doc(db,"tasks",t.firestoreId))).catch(console.error);
+  }
+  tasks = tasks.filter(t => t.id !== id);
+  renderTasks();
+}
+
+async function addTask() {
+  const inp  = document.getElementById("task-input");
+  const text = inp.value.trim();
+  if (!text) return;
+  const dateKey = getSelectedDateKey();
+  const data = { ownerUid: currentUser.uid, text, done: false, dateKey, createdAt: serverTimestamp() };
+  const ref  = await addDoc(collection(db,"tasks"), data);
+  tasks.push({ ...data, id: ref.id, firestoreId: ref.id });
+  inp.value = "";
+  renderTasks();
+}
+
+function clearDoneTasks() {
+  const dateKey  = getSelectedDateKey();
+  const toDelete = tasks.filter(t => t.done && t.dateKey === dateKey);
+  toDelete.forEach(t => {
+    if (t.firestoreId) {
+      import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
+        .then(({deleteDoc:_d}) => _d(doc(db,"tasks",t.firestoreId))).catch(console.error);
+    }
+  });
+  tasks = tasks.filter(t => !(t.done && t.dateKey === dateKey));
+  renderTasks();
+}
 window.toggleTask=toggleTask;window.deleteTask=deleteTask;window.addTask=addTask;window.clearDoneTasks=clearDoneTasks;
 
 // ===== CALENDAR =====
@@ -563,8 +661,18 @@ function renderCalendar(){
   renderCalEvents();
 }
 
-function selectDay(d){selectedDay=d;renderCalendar();}
-function changeMonth(dir){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+dir,1);renderCalendar();}
+function selectDay(d){
+  selectedDay=d;
+  renderCalendar();
+  renderTasks();
+  renderReminders();
+}
+function changeMonth(dir){
+  calDate=new Date(calDate.getFullYear(),calDate.getMonth()+dir,1);
+  renderCalendar();
+  renderTasks();
+  renderReminders();
+}
 window.selectDay=selectDay;window.changeMonth=changeMonth;
 
 function toggleCalEvents() {
@@ -766,33 +874,85 @@ function closeEventAlerts(){document.getElementById("event-alert-overlay").style
 window.closeEventAlerts=closeEventAlerts;
 
 // ===== REMINDERS (local) =====
-let reminders=[],remColorIdx=0;
+// ===== REMINDERS (Firestore, per day) =====
+let reminders=[], remColorIdx=0;
 const reminderColors=["#6BCB77","#4D96FF","#FF6B6B","#C77DFF","#FFD93D"];
 
-function renderReminders(){
+function getRemindersForDay(dateKey) {
+  const todayKey = getTodayKey();
+  return reminders.filter(r => {
+    if (r.dateKey === dateKey) return true;
+    // Show un-dismissed reminders from past days on today
+    if (dateKey === todayKey && r.dateKey < todayKey) return true;
+    return false;
+  });
+}
+
+function renderReminders() {
   scheduleReminderAlerts();
-  const list = document.getElementById("reminder-list");
+  const dateKey  = getSelectedDateKey();
+  const todayKey = getTodayKey();
+  const dayRems  = getRemindersForDay(dateKey);
+  const list     = document.getElementById("reminder-list");
+  const titleEl  = document.querySelector(".reminders-header .card-title");
+
+  if (titleEl) {
+    if (dateKey === todayKey) {
+      titleEl.textContent = "Lembretes — Hoje";
+    } else {
+      const [y,m,d] = dateKey.split("-");
+      titleEl.textContent = "Lembretes — " + d.padStart(2,"0") + "/" + m.padStart(2,"0");
+    }
+  }
+
   list.innerHTML = "";
-  reminders.forEach(r => {
+  dayRems.forEach(r => {
     const div = document.createElement("div");
     div.className = "reminder-item";
-    const timeHtml = r.time ? `<div class="reminder-time-tag">${r.time}</div>` : "";
+    const timeHtml  = r.time ? `<div class="reminder-time-tag">${r.time}</div>` : "";
+    const carryTag  = (r.dateKey < todayKey && dateKey === todayKey)
+      ? `<span class="carry-tag" title="Pendente de dia anterior">↩</span> ` : "";
     div.innerHTML =
       `<div class="reminder-icon" style="background:${r.color}">!</div>` +
-      `<div><div class="reminder-text">${r.text}</div>${timeHtml}</div>` +
+      `<div><div class="reminder-text">${carryTag}${r.text}</div>${timeHtml}</div>` +
       `<button class="reminder-del">✕</button>`;
     div.querySelector(".reminder-del").addEventListener("click", () => deleteReminder(r.id));
     list.appendChild(div);
   });
-  document.getElementById("stat-reminders").textContent=reminders.length;
-  localStorage.setItem("tdahaha-reminders-"+currentUser?.uid, JSON.stringify(reminders));
+
+  document.getElementById("stat-reminders").textContent = dayRems.length;
 }
-function deleteReminder(id){reminders=reminders.filter(r=>r.id!==id);renderReminders();}
-function addReminder(){
-  const inp=document.getElementById("reminder-input"),time=document.getElementById("reminder-time").value,text=inp.value.trim();
-  if(!text)return;
-  reminders.unshift({id:Date.now(),text,time,color:reminderColors[remColorIdx++%reminderColors.length]});
-  inp.value="";document.getElementById("reminder-time").value="";
+
+async function loadReminders() {
+  reminders = [];
+  const q = query(collection(db,"reminders"), where("ownerUid","==",currentUser.uid));
+  const snap = await getDocs(q);
+  snap.forEach(d => reminders.push({ ...d.data(), firestoreId: d.id, id: d.id }));
+  renderReminders();
+}
+
+function deleteReminder(id) {
+  const r = reminders.find(r => r.id === id);
+  if (r?.firestoreId) {
+    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
+      .then(({deleteDoc:_d}) => _d(doc(db,"reminders",r.firestoreId))).catch(console.error);
+  }
+  reminders = reminders.filter(r => r.id !== id);
+  renderReminders();
+}
+
+async function addReminder() {
+  const inp  = document.getElementById("reminder-input");
+  const time = document.getElementById("reminder-time").value;
+  const text = inp.value.trim();
+  if (!text) return;
+  const dateKey = getSelectedDateKey();
+  const color   = reminderColors[remColorIdx++ % reminderColors.length];
+  const data = { ownerUid: currentUser.uid, text, time, color, dateKey, createdAt: serverTimestamp() };
+  const ref  = await addDoc(collection(db,"reminders"), data);
+  reminders.unshift({ ...data, id: ref.id, firestoreId: ref.id });
+  inp.value = "";
+  document.getElementById("reminder-time").value = "";
   renderReminders();
 }
 window.deleteReminder=deleteReminder;window.addReminder=addReminder;
@@ -1153,19 +1313,7 @@ window.deleteNote=deleteNote; window.updateNotePreview=updateNotePreview;
 
 // ===== INIT LOCAL MODULES =====
 function initLocalModules(){
-  // Restore local data per user
-  const uid = currentUser.uid;
-
-  const savedTasks = localStorage.getItem("tdahaha-tasks-"+uid);
-  if(savedTasks){ const p=JSON.parse(savedTasks);tasks=p.tasks||[];totalDone=p.totalDone||0; }
-  else { tasks=[]; totalDone=0; }
-  renderTasks();
-
-  const savedRem = localStorage.getItem("tdahaha-reminders-"+uid);
-  reminders = savedRem ? JSON.parse(savedRem) : [];
-  renderReminders(); // scheduleReminderAlerts() is called inside renderReminders
-
-  // Notes loaded from Firestore (see loadNotes called in startApp)
+  // Tasks, reminders and notes are loaded from Firestore in startApp
   restoreCalState();
 }
 
