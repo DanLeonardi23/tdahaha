@@ -181,18 +181,37 @@ async function deleteEventFromFirestore(firestoreId) {
 }
 
 // ===== FIRESTORE: INVITES =====
+let unsubNoteInvites = null;
+
 function listenInvites() {
-  if (unsubInvites) unsubInvites();
-  const q = query(
-    collection(db, "invites"),
-    where("toUid", "==", currentUser.uid),
-    where("status", "==", "pending")
-  );
-  unsubInvites = onSnapshot(q, snap => {
-    const count = snap.size;
+  if (unsubInvites)     unsubInvites();
+  if (unsubNoteInvites) unsubNoteInvites();
+
+  let countEvents = 0, countNotes = 0;
+
+  function updateBadge() {
+    const total = countEvents + countNotes;
     const btn   = document.getElementById("invite-badge-btn");
-    document.getElementById("invite-badge-count").textContent = count;
-    btn.style.display = count > 0 ? "flex" : "none";
+    document.getElementById("invite-badge-count").textContent = total;
+    btn.style.display = total > 0 ? "flex" : "none";
+  }
+
+  // Watch calendar event invites
+  const q1 = query(collection(db,"invites"),
+    where("toUid","==", currentUser.uid),
+    where("status","==","pending"));
+  unsubInvites = onSnapshot(q1, snap => {
+    countEvents = snap.size;
+    updateBadge();
+  });
+
+  // Watch note invites
+  const q2 = query(collection(db,"note-invites"),
+    where("toUid","==", currentUser.uid),
+    where("status","==","pending"));
+  unsubNoteInvites = onSnapshot(q2, snap => {
+    countNotes = snap.size;
+    updateBadge();
   });
 }
 
@@ -200,54 +219,79 @@ function listenInvites() {
 let pendingInvitesCache = {};
 
 async function openPendingInvites() {
-  const q = query(
-    collection(db, "invites"),
-    where("toUid",  "==", currentUser.uid),
-    where("status", "==", "pending")
-  );
-  const snap = await getDocs(q);
   const list = document.getElementById("invite-panel-list");
   list.innerHTML = "";
   pendingInvitesCache = {};
+  let totalCards = 0;
 
-  if (snap.empty) {
+  // ── Calendar event invites ──
+  const q1 = query(collection(db,"invites"),
+    where("toUid","==", currentUser.uid),
+    where("status","==","pending"));
+  const snap1 = await getDocs(q1);
+
+  snap1.forEach(d => {
+    const inv = { ...d.data(), id: d.id, _type: "event" };
+    pendingInvitesCache[inv.id] = inv;
+    totalCards++;
+
+    const isEdit  = inv.type === "edit";
+    const timeStr = inv.event.time ? " · ⏰ " + inv.event.time : "";
+    const obsHtml = inv.event.obs
+      ? `<div class="invite-event-obs">${inv.event.obs}</div>` : "";
+
+    const card = document.createElement("div");
+    card.className = "invite-card rel-" + (inv.event.relevance || "green");
+    card.innerHTML =
+      `<div class="invite-card-from">${isEdit ? "✏️ Edição de" : "📅 Evento de"} <strong>${inv.fromUsername}</strong></div>
+       <div class="invite-card-event">
+         <div class="invite-event-name">${inv.event.text}</div>
+         <div class="invite-event-date">📆 ${formatDateKey(inv.event.dateKey)}${timeStr}</div>
+         ${obsHtml}
+       </div>
+       <div class="invite-card-actions">
+         <button class="invite-accept-btn">✓ Aceitar</button>
+         <button class="invite-reject-btn">✕ Recusar</button>
+       </div>`;
+    card.querySelector(".invite-accept-btn").addEventListener("click", () => respondInvite(inv.id, "accepted"));
+    card.querySelector(".invite-reject-btn").addEventListener("click", () => respondInvite(inv.id, "rejected"));
+    list.appendChild(card);
+  });
+
+  // ── Note invites ──
+  const q2 = query(collection(db,"note-invites"),
+    where("toUid","==", currentUser.uid),
+    where("status","==","pending"));
+  const snap2 = await getDocs(q2);
+
+  snap2.forEach(d => {
+    const inv = { ...d.data(), id: d.id, _type: "note" };
+    pendingInvitesCache[inv.id] = inv;
+    totalCards++;
+
+    const previewText = inv.note.content
+      ? inv.note.content.substring(0, 80) + (inv.note.content.length > 80 ? "..." : "")
+      : "Sem conteúdo";
+
+    const card = document.createElement("div");
+    card.className = "invite-card invite-card-note";
+    card.innerHTML =
+      `<div class="invite-card-from">💡 Ideia de <strong>${inv.fromUsername}</strong></div>
+       <div class="invite-card-event">
+         <div class="invite-event-name">${inv.note.title || "Sem título"}</div>
+         <div class="invite-event-obs">${previewText}</div>
+       </div>
+       <div class="invite-card-actions">
+         <button class="invite-accept-btn">✓ Aceitar</button>
+         <button class="invite-reject-btn">✕ Recusar</button>
+       </div>`;
+    card.querySelector(".invite-accept-btn").addEventListener("click", () => respondNoteInvite(inv.id, "accepted"));
+    card.querySelector(".invite-reject-btn").addEventListener("click", () => respondNoteInvite(inv.id, "rejected"));
+    list.appendChild(card);
+  });
+
+  if (totalCards === 0) {
     list.innerHTML = '<div class="invite-empty">Nenhum convite pendente.</div>';
-  } else {
-    snap.forEach(d => {
-      const inv = { ...d.data(), id: d.id };
-      // Store in memory — referenced by id from button clicks
-      pendingInvitesCache[inv.id] = inv;
-
-      const isEdit = inv.type === "edit";
-      const card = document.createElement("div");
-      card.className = "invite-card rel-" + (inv.event.relevance || "green");
-
-      const timeStr = inv.event.time ? " · ⏰ " + inv.event.time : "";
-      const obsHtml = inv.event.obs
-        ? `<div class="invite-event-obs">${inv.event.obs}</div>` : "";
-
-      card.innerHTML =
-        `<div class="invite-card-from">${isEdit ? "✏️ Edição de" : "📅 Convite de"} <strong>${inv.fromUsername}</strong></div>
-        <div class="invite-card-event">
-          <div class="invite-event-name">${inv.event.text}</div>
-          <div class="invite-event-date">📆 ${formatDateKey(inv.event.dateKey)}${timeStr}</div>
-          ${obsHtml}
-        </div>
-        <div class="invite-card-actions">
-          <button class="invite-accept-btn" data-id="${inv.id}">✓ Aceitar</button>
-          <button class="invite-reject-btn" data-id="${inv.id}">✕ Recusar</button>
-        </div>`;
-
-      // Attach listeners directly — no inline JSON
-      card.querySelector(".invite-accept-btn").addEventListener("click", () => {
-        respondInvite(inv.id, "accepted");
-      });
-      card.querySelector(".invite-reject-btn").addEventListener("click", () => {
-        respondInvite(inv.id, "rejected");
-      });
-
-      list.appendChild(card);
-    });
   }
 
   document.getElementById("invite-overlay").style.display = "flex";
@@ -952,37 +996,38 @@ async function shareCurrentNote(){
 }
 window.shareCurrentNote = shareCurrentNote;
 
-// Check for pending note invites on startup
+// respondNoteInvite — called when user accepts or rejects a note invite
+async function respondNoteInvite(inviteId, status) {
+  await updateDoc(doc(db,"note-invites", inviteId), { status });
+
+  if (status === "accepted") {
+    const inv = pendingInvitesCache[inviteId];
+    if (inv) {
+      const noteData = {
+        ownerUid:   currentUser.uid,
+        title:      inv.note.title   || "",
+        content:    inv.note.content || "",
+        date:       inv.note.date    || formatDate(new Date()),
+        sharedFrom: inv.fromUsername,
+        createdAt:  serverTimestamp()
+      };
+      const ref = await addDoc(collection(db,"notes"), noteData);
+      notes.unshift({ ...noteData, id: Date.now(), firestoreId: ref.id });
+      renderNotesSidebar();
+      showToast("💡 Ideia adicionada às suas notas!");
+    }
+  }
+
+  delete pendingInvitesCache[inviteId];
+  closeInviteOverlay();
+  await openPendingInvites(); // refresh panel
+}
+window.respondNoteInvite = respondNoteInvite;
+
+// checkNoteInvites — kept as no-op; badge listener handles detection
 async function checkNoteInvites() {
-  const q = query(
-    collection(db,"note-invites"),
-    where("toUid",  "==", currentUser.uid),
-    where("status", "==", "pending")
-  );
-  const snap = await getDocs(q);
-  if (snap.empty) return;
-
-  snap.forEach(async d => {
-    const inv = { ...d.data(), id: d.id };
-    // Auto-accept: add to user's notes
-    const noteData = {
-      ownerUid:   currentUser.uid,
-      title:      inv.note.title,
-      content:    inv.note.content,
-      date:       inv.note.date || formatDate(new Date()),
-      sharedFrom: inv.fromUsername,
-      createdAt:  serverTimestamp()
-    };
-    const ref = await addDoc(collection(db,"notes"), noteData);
-    notes.unshift({ ...noteData, id: Date.now(), firestoreId: ref.id });
-
-    // Mark invite as accepted
-    const { updateDoc: _upd } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await _upd(doc(db,"note-invites", inv.id), { status: "accepted" });
-  });
-
-  renderNotesSidebar();
-  showToast("💡 " + snap.size + " ideia(s) compartilhada(s) recebida(s)!");
+  // Badge count is handled by listenInvites() real-time listener.
+  // User opens the panel manually via the bell icon.
 }
 
 function updateNotePreview(){ updateCharCount(); }

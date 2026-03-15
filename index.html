@@ -1,293 +1,611 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TDAHAHA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <meta name="theme-color" content="#C77DFF" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="TDAHAHA" />
-</head>
-<body>
-
-<!-- LOGIN -->
-<div id="login-screen" class="login-screen">
-  <div class="login-box">
-    <div class="login-logo">TDAH<span>AHA</span></div>
-    <div class="login-subtitle">Sua agenda do jeito que sua mente funciona</div>
-    <div class="login-form">
-      <div class="login-field">
-        <label class="login-label">Nome de usuário</label>
-        <input class="login-input" id="login-username" type="text" placeholder="seu nome" autocomplete="username" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TDAHAHA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <meta name="theme-color" content="#C77DFF" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="TDAHAHA" />
+  </head>
+  <body>
+    <!-- LOGIN -->
+    <div id="login-screen" class="login-screen">
+      <div class="login-box">
+        <div class="login-logo">TDAH<span>AHA</span></div>
+        <div class="login-subtitle">
+          Sua agenda do jeito que sua mente funciona
+        </div>
+        <div class="login-form">
+          <div class="login-field">
+            <label class="login-label">Nome de usuário</label>
+            <input
+              class="login-input"
+              id="login-username"
+              type="text"
+              placeholder="seu nome"
+              autocomplete="username"
+            />
+          </div>
+          <div class="login-field">
+            <label class="login-label">Senha</label>
+            <input
+              class="login-input"
+              id="login-password"
+              type="password"
+              placeholder="••••••"
+              onkeydown="if (event.key === 'Enter') doLogin();"
+            />
+          </div>
+          <div class="login-error" id="login-error"></div>
+          <button class="login-btn" onclick="doLogin()">Entrar</button>
+          <button class="login-register-link" onclick="showRegister()">
+            Não tem conta? Criar agora
+          </button>
+        </div>
       </div>
-      <div class="login-field">
-        <label class="login-label">Senha</label>
-        <input class="login-input" id="login-password" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()" />
-      </div>
-      <div class="login-error" id="login-error"></div>
-      <button class="login-btn" onclick="doLogin()">Entrar</button>
-      <button class="login-register-link" onclick="showRegister()">Não tem conta? Criar agora</button>
     </div>
-  </div>
-</div>
 
-<!-- REGISTER -->
-<div id="register-screen" class="login-screen" style="display:none;">
-  <div class="login-box">
-    <div class="login-logo">TDAH<span>AHA</span></div>
-    <div class="login-subtitle">Criar nova conta</div>
-    <div class="login-form">
-      <div class="login-field">
-        <label class="login-label">Nome de usuário</label>
-        <input class="login-input" id="reg-username" type="text" placeholder="escolha um nome único" />
+    <!-- REGISTER -->
+    <div id="register-screen" class="login-screen" style="display: none">
+      <div class="login-box">
+        <div class="login-logo">TDAH<span>AHA</span></div>
+        <div class="login-subtitle">Criar nova conta</div>
+        <div class="login-form">
+          <div class="login-field">
+            <label class="login-label">Nome de usuário</label>
+            <input
+              class="login-input"
+              id="reg-username"
+              type="text"
+              placeholder="escolha um nome único"
+            />
+          </div>
+          <div class="login-field">
+            <label class="login-label">Senha</label>
+            <input
+              class="login-input"
+              id="reg-password"
+              type="password"
+              placeholder="mínimo 4 caracteres"
+            />
+          </div>
+          <div class="login-field">
+            <label class="login-label">Confirmar senha</label>
+            <input
+              class="login-input"
+              id="reg-password2"
+              type="password"
+              placeholder="repita a senha"
+              onkeydown="if (event.key === 'Enter') doRegister();"
+            />
+          </div>
+          <div class="login-error" id="reg-error"></div>
+          <button class="login-btn" onclick="doRegister()">Criar conta</button>
+          <button class="login-register-link" onclick="showLogin()">
+            Já tem conta? Entrar
+          </button>
+        </div>
       </div>
-      <div class="login-field">
-        <label class="login-label">Senha</label>
-        <input class="login-input" id="reg-password" type="password" placeholder="mínimo 4 caracteres" />
-      </div>
-      <div class="login-field">
-        <label class="login-label">Confirmar senha</label>
-        <input class="login-input" id="reg-password2" type="password" placeholder="repita a senha" onkeydown="if(event.key==='Enter')doRegister()" />
-      </div>
-      <div class="login-error" id="reg-error"></div>
-      <button class="login-btn" onclick="doRegister()">Criar conta</button>
-      <button class="login-register-link" onclick="showLogin()">Já tem conta? Entrar</button>
     </div>
-  </div>
-</div>
 
-<!-- APP -->
-<div class="app" id="main-app" style="display:none;">
-  <nav class="nav">
-   <div class="nav-inner">
-    <div class="nav-logo">TDAH<span>AHA</span></div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showPage('main', this)">Início</button>
-      <button class="nav-tab notes-tab" onclick="showPage('notes', this)">Ideias</button>
-    </div>
-    <div class="nav-right">
-      <button class="invite-badge-btn" id="invite-badge-btn" onclick="openPendingInvites()" title="Convites pendentes" style="display:none;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="invite-badge-count" id="invite-badge-count">0</span>
-      </button>
-      <div class="nav-user" id="nav-user">—</div>
-      <button class="logout-btn" onclick="doLogout()" title="Sair">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
-      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
-        <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-      </button>
-      <div class="nav-time" id="clock">00:00</div>
-    </div>
-   </div>
-  </nav>
-
-  <div class="page active" id="page-main">
-    <div class="main-grid">
-
-      <!-- LEFT -->
-      <div class="left-col">
-        <div class="card timer-card">
-          <div class="timer-header-row">
-            <div class="card-title" style="margin-bottom:0;">Cronometro regressivo</div>
-            <button class="mute-btn" id="mute-btn" onclick="toggleMute()" title="Som">
-              <svg id="mute-icon-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-              <svg id="mute-icon-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    <!-- APP -->
+    <div class="app" id="main-app" style="display: none">
+      <nav class="nav">
+        <div class="nav-inner">
+          <div class="nav-logo">TDAH<span>AHA</span></div>
+          <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showPage('main', this)">
+              Início
+            </button>
+            <button class="nav-tab notes-tab" onclick="showPage('notes', this)">
+              Ideias
             </button>
           </div>
-          <div class="timer-presets">
-            <button class="preset-btn" onclick="applyPreset(5)">5 min</button>
-            <button class="preset-btn" onclick="applyPreset(10)">10 min</button>
-            <button class="preset-btn" onclick="applyPreset(25)">25 min</button>
-            <button class="preset-btn" onclick="applyPreset(45)">45 min</button>
+          <div class="nav-right">
+            <button
+              class="invite-badge-btn"
+              id="invite-badge-btn"
+              onclick="openPendingInvites()"
+              title="Convites pendentes"
+              style="display: none"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              <span class="invite-badge-count" id="invite-badge-count">0</span>
+            </button>
+            <div class="nav-user" id="nav-user">—</div>
+            <button class="logout-btn" onclick="doLogout()" title="Sair">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+            <button
+              class="theme-toggle"
+              id="theme-toggle"
+              onclick="toggleTheme()"
+              title="Alternar tema"
+            >
+              <svg
+                id="theme-icon-moon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <svg
+                id="theme-icon-sun"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="display: none"
+              >
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            </button>
+            <div class="nav-time" id="clock">00:00</div>
           </div>
-          <div class="timer-set-row">
-            <input class="timer-set-input" id="timer-set-input" type="text" value="00:00:00" maxlength="8" inputmode="numeric"
-              onkeydown="timerInputKeydown(event)" onkeyup="timerInputKeyup(event)" onfocus="timerInputFocus()" onpaste="return false;" />
-            <button class="timer-set-btn" onclick="setTimerFromInput()">Definir</button>
-          </div>
-          <div class="timer-display" id="timer-display">00:00:00</div>
-          <div class="timer-progress-track"><div class="timer-progress" id="timer-progress"></div></div>
-          <div class="timer-btns">
-            <button class="timer-btn start" id="timer-start-btn" onclick="toggleTimer()">Iniciar</button>
-            <button class="timer-btn reset" onclick="resetTimer()">Zerar</button>
-          </div>
-          <div class="timer-label" id="timer-label">Escolha um preset ou digite o tempo</div>
         </div>
+      </nav>
 
-        <div class="card tasks-card">
-          <div class="tasks-header"><span class="card-title">Tarefas</span></div>
-          <div class="task-input-row">
-            <input class="task-input" id="task-input" placeholder="Nova tarefa..." onkeydown="if(event.key==='Enter')addTask()" />
-            <button class="task-add-confirm" onclick="addTask()">+</button>
-          </div>
-          <div class="tasks-list" id="tasks-list"></div>
-          <div class="tasks-done-bar">
-            <span class="tasks-done-label">Concluídas hoje</span>
-            <span class="tasks-done-count" id="stat-tasks">0</span>
-          </div>
-          <button class="tasks-clear-btn" onclick="clearDoneTasks()">Limpar concluídas</button>
-        </div>
-      </div>
+      <div class="page active" id="page-main">
+        <div class="main-grid">
+          <!-- LEFT -->
+          <div class="left-col">
+            <div class="card timer-card">
+              <div class="timer-header-row">
+                <div class="card-title" style="margin-bottom: 0">
+                  Cronometro regressivo
+                </div>
+                <button
+                  class="mute-btn"
+                  id="mute-btn"
+                  onclick="toggleMute()"
+                  title="Som"
+                >
+                  <svg
+                    id="mute-icon-on"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                  </svg>
+                  <svg
+                    id="mute-icon-off"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="display: none"
+                  >
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </svg>
+                </button>
+              </div>
+              <div class="timer-presets">
+                <button class="preset-btn" onclick="applyPreset(5)">
+                  5 min
+                </button>
+                <button class="preset-btn" onclick="applyPreset(10)">
+                  10 min
+                </button>
+                <button class="preset-btn" onclick="applyPreset(25)">
+                  25 min
+                </button>
+                <button class="preset-btn" onclick="applyPreset(45)">
+                  45 min
+                </button>
+              </div>
+              <div class="timer-set-row">
+                <input
+                  class="timer-set-input"
+                  id="timer-set-input"
+                  type="text"
+                  value="00:00:00"
+                  maxlength="8"
+                  inputmode="numeric"
+                  onkeydown="timerInputKeydown(event)"
+                  onkeyup="timerInputKeyup(event)"
+                  onfocus="timerInputFocus()"
+                  onpaste="return false;"
+                />
+                <button class="timer-set-btn" onclick="setTimerFromInput()">
+                  Definir
+                </button>
+              </div>
+              <div class="timer-display" id="timer-display">00:00:00</div>
+              <div class="timer-progress-track">
+                <div class="timer-progress" id="timer-progress"></div>
+              </div>
+              <div class="timer-btns">
+                <button
+                  class="timer-btn start"
+                  id="timer-start-btn"
+                  onclick="toggleTimer()"
+                >
+                  Iniciar
+                </button>
+                <button class="timer-btn reset" onclick="resetTimer()">
+                  Zerar
+                </button>
+              </div>
+              <div class="timer-label" id="timer-label">
+                Escolha um preset ou digite o tempo
+              </div>
+            </div>
 
-      <!-- CENTER: Calendar -->
-      <div class="card calendar-card">
-        <div class="cal-header">
-          <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
-          <div class="cal-month" id="cal-month-label"></div>
-          <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
-        </div>
-        <div class="cal-grid" id="cal-grid"></div>
-        <div class="cal-event-area" id="cal-event-area">
-          <div class="cal-add-block">
-            <div class="cal-day-label-row">
-              <div class="cal-event-title" id="cal-day-label">Eventos</div>
-            </div>
-            <div class="cal-title-time-row">
-              <input class="cal-event-input" id="cal-event-input" placeholder="Título do evento..." />
-              <input class="cal-event-time" id="cal-event-time" type="time" />
-            </div>
-            <div class="cal-relevance-group cal-relevance-standalone">
-              <button class="rel-btn rel-green active" id="rel-green" onclick="setRelevance('green')" title="Baixa"></button>
-              <button class="rel-btn rel-yellow" id="rel-yellow" onclick="setRelevance('yellow')" title="Média"></button>
-              <button class="rel-btn rel-red" id="rel-red" onclick="setRelevance('red')" title="Alta"></button>
-            </div>
-            <textarea class="cal-event-obs" id="cal-event-obs" placeholder="Observações (opcional)..." rows="2"></textarea>
-            <div class="cal-options-row">
-              <label class="cal-notify-row">
-                <input type="checkbox" id="cal-notify-check" class="cal-notify-check" />
-                <span class="cal-notify-label">🔔 Avisar um dia antes</span>
-              </label>
-              <label class="cal-notify-row" id="cal-share-row" style="display:none;">
-                <input type="checkbox" id="cal-share-check" class="cal-notify-check" />
-                <span class="cal-notify-label">📤 Compartilhar com <strong id="other-user-name">—</strong></span>
-              </label>
-            </div>
-            <button class="cal-event-btn-full" onclick="addCalEvent()">+ Adicionar Evento</button>
-          </div>
-          <button class="cal-collapse-btn" id="cal-collapse-btn" onclick="toggleCalEvents()" title="Minimizar formulário">
-            <svg id="cal-collapse-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-            <span id="cal-collapse-label">Ocultar formulário</span>
-          </button>
-          <div class="cal-events-list" id="cal-events-list"></div>
-        </div>
-      </div>
-
-      <!-- RIGHT -->
-      <div class="right-col">
-        <div class="card reminders-card">
-          <div class="reminders-header"><span class="card-title">Lembretes Rápidos</span></div>
-          <div class="reminder-input-row">
-            <div class="reminder-inputs">
-              <input class="reminder-input" id="reminder-input" placeholder="Novo lembrete..." onkeydown="if(event.key==='Enter')addReminder()" />
-              <input class="reminder-time-input" id="reminder-time" type="time" />
-            </div>
-            <button class="reminder-add-btn" onclick="addReminder()">+</button>
-          </div>
-          <div class="reminder-list" id="reminder-list"></div>
-        </div>
-        <div class="card stats-card">
-          <div class="card-title">Hoje</div>
-          <div class="stats-grid">
-            <div class="stat-box stat-green">
-              <div class="stat-number green" id="stat-reminders">0</div>
-              <div class="stat-label">Lembretes</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- NOTES PAGE -->
-  <div class="page" id="page-notes">
-    <div class="notes-page">
-      <div class="notes-header">
-        <div class="notes-page-title">Bloco de Ideias</div>
-        <button class="new-note-btn" onclick="newNote()">+ Nova Ideia</button>
-      </div>
-      <div class="notes-body">
-        <div class="notes-sidebar" id="notes-sidebar"></div>
-        <div class="note-editor" id="note-editor">
-          <div class="empty-notes" id="empty-notes">
-            <div class="empty-icon">💡</div>
-            <div class="empty-text">Clique em "Nova Ideia" para começar</div>
-          </div>
-          <input class="note-title-input" id="note-title" placeholder="Título da ideia..." oninput="updateNotePreview()" style="display:none;" />
-          <textarea class="note-content-input" id="note-content" placeholder="Escreva sua ideia aqui..." oninput="updateNotePreview()" style="display:none;"></textarea>
-          <div class="note-footer" id="note-footer" style="display:none;">
-            <div class="note-footer-left">
-              <span class="note-char-count" id="char-count">0 caracteres</span>
-              <span class="note-shared-badge" id="note-shared-badge" style="display:none;"></span>
-            </div>
-            <div class="note-actions">
-              <button class="note-share-btn" id="note-share-btn" onclick="shareCurrentNote()" title="Compartilhar ideia" style="display:none;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                </svg>
-                Compartilhar
+            <div class="card tasks-card">
+              <div class="tasks-header">
+                <span class="card-title">Tarefas</span>
+              </div>
+              <div class="task-input-row">
+                <input
+                  class="task-input"
+                  id="task-input"
+                  placeholder="Nova tarefa..."
+                  onkeydown="if (event.key === 'Enter') addTask();"
+                />
+                <button class="task-add-confirm" onclick="addTask()">+</button>
+              </div>
+              <div class="tasks-list" id="tasks-list"></div>
+              <div class="tasks-done-bar">
+                <span class="tasks-done-label">Concluídas hoje</span>
+                <span class="tasks-done-count" id="stat-tasks">0</span>
+              </div>
+              <button class="tasks-clear-btn" onclick="clearDoneTasks()">
+                Limpar concluídas
               </button>
-              <button class="note-del-btn" onclick="deleteNote()">Apagar</button>
-              <button class="note-save-btn" onclick="saveNote()">Salvar</button>
+            </div>
+          </div>
+
+          <!-- CENTER: Calendar -->
+          <div class="card calendar-card">
+            <div class="cal-header">
+              <button class="cal-nav" onclick="changeMonth(-1)">&#8249;</button>
+              <div class="cal-month" id="cal-month-label"></div>
+              <button class="cal-nav" onclick="changeMonth(1)">&#8250;</button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <div class="cal-event-area" id="cal-event-area">
+              <div class="cal-add-block">
+                <div class="cal-day-label-row">
+                  <div class="cal-event-title" id="cal-day-label">Eventos</div>
+                </div>
+                <div class="cal-title-time-row">
+                  <input
+                    class="cal-event-input"
+                    id="cal-event-input"
+                    placeholder="Título do evento..."
+                  />
+                  <input
+                    class="cal-event-time"
+                    id="cal-event-time"
+                    type="time"
+                  />
+                </div>
+                <div class="cal-relevance-group cal-relevance-standalone">
+                  <button
+                    class="rel-btn rel-green active"
+                    id="rel-green"
+                    onclick="setRelevance('green')"
+                    title="Baixa"
+                  ></button>
+                  <button
+                    class="rel-btn rel-yellow"
+                    id="rel-yellow"
+                    onclick="setRelevance('yellow')"
+                    title="Média"
+                  ></button>
+                  <button
+                    class="rel-btn rel-red"
+                    id="rel-red"
+                    onclick="setRelevance('red')"
+                    title="Alta"
+                  ></button>
+                </div>
+                <textarea
+                  class="cal-event-obs"
+                  id="cal-event-obs"
+                  placeholder="Observações (opcional)..."
+                  rows="2"
+                ></textarea>
+                <div class="cal-options-row">
+                  <label class="cal-notify-row">
+                    <input
+                      type="checkbox"
+                      id="cal-notify-check"
+                      class="cal-notify-check"
+                    />
+                    <span class="cal-notify-label">🔔 Avisar um dia antes</span>
+                  </label>
+                  <label
+                    class="cal-notify-row"
+                    id="cal-share-row"
+                    style="display: none"
+                  >
+                    <input
+                      type="checkbox"
+                      id="cal-share-check"
+                      class="cal-notify-check"
+                    />
+                    <span class="cal-notify-label"
+                      >📤 Compartilhar com
+                      <strong id="other-user-name">—</strong></span
+                    >
+                  </label>
+                </div>
+                <button class="cal-event-btn-full" onclick="addCalEvent()">
+                  + Adicionar Evento
+                </button>
+              </div>
+              <button
+                class="cal-collapse-btn"
+                id="cal-collapse-btn"
+                onclick="toggleCalEvents()"
+                title="Minimizar formulário"
+              >
+                <svg
+                  id="cal-collapse-icon"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="18 15 12 9 6 15" />
+                </svg>
+                <span id="cal-collapse-label">Ocultar formulário</span>
+              </button>
+              <div class="cal-events-list" id="cal-events-list"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="right-col">
+            <div class="card reminders-card">
+              <div class="reminders-header">
+                <span class="card-title">Lembretes Rápidos</span>
+              </div>
+              <div class="reminder-input-row">
+                <div class="reminder-inputs">
+                  <input
+                    class="reminder-input"
+                    id="reminder-input"
+                    placeholder="Novo lembrete..."
+                    onkeydown="if (event.key === 'Enter') addReminder();"
+                  />
+                  <input
+                    class="reminder-time-input"
+                    id="reminder-time"
+                    type="time"
+                  />
+                </div>
+                <button class="reminder-add-btn" onclick="addReminder()">
+                  +
+                </button>
+              </div>
+              <div class="reminder-list" id="reminder-list"></div>
+            </div>
+            <div class="card stats-card">
+              <div class="card-title">Hoje</div>
+              <div class="stats-grid">
+                <div class="stat-box stat-green">
+                  <div class="stat-number green" id="stat-reminders">0</div>
+                  <div class="stat-label">Lembretes</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- NOTES PAGE -->
+      <div class="page" id="page-notes">
+        <div class="notes-page">
+          <div class="notes-header">
+            <div class="notes-page-title">Bloco de Ideias</div>
+            <button class="new-note-btn" onclick="newNote()">
+              + Nova Ideia
+            </button>
+          </div>
+          <div class="notes-body">
+            <div class="notes-sidebar" id="notes-sidebar"></div>
+            <div class="note-editor" id="note-editor">
+              <div class="empty-notes" id="empty-notes">
+                <div class="empty-icon">💡</div>
+                <div class="empty-text">
+                  Clique em "Nova Ideia" para começar
+                </div>
+              </div>
+              <input
+                class="note-title-input"
+                id="note-title"
+                placeholder="Título da ideia..."
+                oninput="updateNotePreview()"
+                style="display: none"
+              />
+              <textarea
+                class="note-content-input"
+                id="note-content"
+                placeholder="Escreva sua ideia aqui..."
+                oninput="updateNotePreview()"
+                style="display: none"
+              ></textarea>
+              <div class="note-footer" id="note-footer" style="display: none">
+                <div class="note-footer-left">
+                  <span class="note-char-count" id="char-count"
+                    >0 caracteres</span
+                  >
+                  <span
+                    class="note-shared-badge"
+                    id="note-shared-badge"
+                    style="display: none"
+                  ></span>
+                </div>
+                <div class="note-actions">
+                  <button
+                    class="note-share-btn"
+                    id="note-share-btn"
+                    onclick="shareCurrentNote()"
+                    title="Compartilhar ideia"
+                    style="display: none"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="18" cy="5" r="3" />
+                      <circle cx="6" cy="12" r="3" />
+                      <circle cx="18" cy="19" r="3" />
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                    Compartilhar
+                  </button>
+                  <button class="note-del-btn" onclick="deleteNote()">
+                    Apagar
+                  </button>
+                  <button class="note-save-btn" onclick="saveNote()">
+                    Salvar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="app-footer">
+        Desenvolvido por <span>Dan Leonardi</span> &mdash; 2026
+      </footer>
     </div>
-  </div>
-  <footer class="app-footer">
-    Desenvolvido por <span>Dan Leonardi</span> &mdash; 2026
-  </footer>
-</div>
 
-<!-- INVITE OVERLAY -->
-<div id="invite-overlay" style="display:none;">
-  <div class="invite-panel">
-    <div class="invite-panel-header">
-      <span class="invite-panel-icon">📬</span>
-      <span class="invite-panel-title">Convites Pendentes</span>
+    <!-- INVITE OVERLAY -->
+    <div id="invite-overlay" style="display: none">
+      <div class="invite-panel">
+        <div class="invite-panel-header">
+          <span class="invite-panel-icon">📬</span>
+          <span class="invite-panel-title">Convites Pendentes</span>
+        </div>
+        <div class="invite-panel-list" id="invite-panel-list"></div>
+        <button class="invite-panel-close" onclick="closeInviteOverlay()">
+          Fechar
+        </button>
+      </div>
     </div>
-    <div class="invite-panel-list" id="invite-panel-list"></div>
-    <button class="invite-panel-close" onclick="closeInviteOverlay()">Fechar</button>
-  </div>
-</div>
 
-<!-- EVENT ALERT OVERLAY -->
-<div id="event-alert-overlay" style="display:none;">
-  <div class="event-alert-panel">
-    <div class="event-alert-header">
-      <span class="event-alert-icon">🔔</span>
-      <span class="event-alert-title">Eventos Amanhã</span>
-      <button class="event-alert-close" onclick="closeEventAlerts()">✕</button>
+    <!-- EVENT ALERT OVERLAY -->
+    <div id="event-alert-overlay" style="display: none">
+      <div class="event-alert-panel">
+        <div class="event-alert-header">
+          <span class="event-alert-icon">🔔</span>
+          <span class="event-alert-title">Eventos Amanhã</span>
+          <button class="event-alert-close" onclick="closeEventAlerts()">
+            ✕
+          </button>
+        </div>
+        <div class="event-alert-list" id="event-alert-list"></div>
+      </div>
     </div>
-    <div class="event-alert-list" id="event-alert-list"></div>
-  </div>
-</div>
 
-<!-- TIMER ALERT OVERLAY -->
-<div id="timer-alert-overlay" style="display:none;">
-  <div class="alert-box">
-    <div class="alert-icon">⏰</div>
-    <div class="alert-title">TEMPO ESGOTADO</div>
-    <div id="alert-muted-badge" class="alert-muted-badge" style="display:none;">som desativado</div>
-    <div class="alert-sub">Seu cronômetro chegou ao fim!</div>
-    <button class="alert-btn" onclick="closeTimerAlert()">OK, entendi!</button>
-  </div>
-</div>
+    <!-- TIMER ALERT OVERLAY -->
+    <div id="timer-alert-overlay" style="display: none">
+      <div class="alert-box">
+        <div class="alert-icon">⏰</div>
+        <div class="alert-title">TEMPO ESGOTADO</div>
+        <div
+          id="alert-muted-badge"
+          class="alert-muted-badge"
+          style="display: none"
+        >
+          som desativado
+        </div>
+        <div class="alert-sub">Seu cronômetro chegou ao fim!</div>
+        <button class="alert-btn" onclick="closeTimerAlert()">
+          OK, entendi!
+        </button>
+      </div>
+    </div>
 
-<script type="module" src="app.js?v=3"></script>
-</body>
+    <script type="module" src="app.js?v=3"></script>
+  </body>
 </html>
