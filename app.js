@@ -1001,8 +1001,47 @@ async function saveNote(){
   showToast("Ideia salva! 💡");
 }
 
+function showConfirmModal(title, subtitle) {
+  return new Promise(resolve => {
+    // Remove any existing modal
+    const existing = document.getElementById("confirm-modal");
+    if (existing) existing.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "confirm-modal";
+    modal.className = "confirm-modal-overlay";
+    modal.innerHTML =
+      `<div class="confirm-modal-box">
+         <div class="confirm-modal-icon">🗑️</div>
+         <div class="confirm-modal-title">${title}</div>
+         ${subtitle ? `<div class="confirm-modal-sub">${subtitle}</div>` : ""}
+         <div class="confirm-modal-actions">
+           <button class="confirm-modal-cancel">Cancelar</button>
+           <button class="confirm-modal-ok">Apagar</button>
+         </div>
+       </div>`;
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add("visible"));
+
+    modal.querySelector(".confirm-modal-cancel").addEventListener("click", () => {
+      modal.remove();
+      resolve(false);
+    });
+    modal.querySelector(".confirm-modal-ok").addEventListener("click", () => {
+      modal.remove();
+      resolve(true);
+    });
+    // Click outside to cancel
+    modal.addEventListener("click", e => {
+      if (e.target === modal) { modal.remove(); resolve(false); }
+    });
+  });
+}
+
 async function deleteNote(){
-  if (!confirm("Apagar esta ideia?")) return;
+  const confirmed = await showConfirmModal("Apagar esta ideia?", "Esta ação não pode ser desfeita.");
+  if (!confirmed) return;
   const n = notes.find(n => n.id === currentNoteId);
   if (!n) return;
 
