@@ -136,6 +136,10 @@ async function startApp() {
   // Request notification permission
   await requestNotificationPermission();
 
+  // Load notes from Firestore
+  await loadNotes();
+  await checkNoteInvites();
+
   // Check day-before alerts
   checkEventAlerts();
 }
@@ -802,54 +806,192 @@ function showReminderBanner(r) {
   requestAnimationFrame(() => banner.classList.add("visible"));
 }
 
-// ===== NOTES (local) =====
-let notes=[],currentNoteId=null;
-function formatDate(d){return d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0")+"/"+d.getFullYear();}
+// ===== NOTES (Firestore) =====
+let notes=[], currentNoteId=null;
+
+function formatDate(d){
+  return d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0")+"/"+d.getFullYear();
+}
+
+async function loadNotes() {
+  notes = [];
+  const q = query(collection(db,"notes"), where("ownerUid","==",currentUser.uid));
+  const snap = await getDocs(q);
+  snap.forEach(d => notes.push({ ...d.data(), firestoreId: d.id }));
+  // Sort by createdAt desc
+  notes.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+  renderNotesSidebar();
+  if (notes.length > 0) openNote(notes[0].id);
+}
+
 function renderNotesSidebar(){
   const sidebar = document.getElementById("notes-sidebar");
   sidebar.innerHTML = "";
   notes.forEach(n => {
     const div = document.createElement("div");
     div.className = "note-card-mini" + (currentNoteId === n.id ? " active" : "");
+    const sharedTag = n.sharedFrom
+      ? `<span class="note-shared-tag">de ${n.sharedFrom}</span>` : "";
     div.innerHTML =
-      `<div class="note-mini-title">${n.title||"Sem título"}</div>` +
+      `<div class="note-mini-title">${sharedTag}${n.title||"Sem título"}</div>` +
       `<div class="note-mini-preview">${n.content ? n.content.substring(0,40)+"..." : "Vazio"}</div>` +
       `<div class="note-mini-date">${n.date}</div>`;
     div.addEventListener("click", () => openNote(n.id));
     sidebar.appendChild(div);
   });
 }
+
 function openNote(id){
-  currentNoteId=id;const n=notes.find(n=>n.id===id);
-  document.getElementById("empty-notes").style.display="none";
-  document.getElementById("note-title").style.display="block";
-  document.getElementById("note-content").style.display="block";
-  document.getElementById("note-footer").style.display="flex";
-  document.getElementById("note-title").value=n.title;
-  document.getElementById("note-content").value=n.content;
-  updateCharCount();renderNotesSidebar();
-}
-function newNote(){const n={id:Date.now(),title:"",content:"",date:formatDate(new Date())};notes.unshift(n);openNote(n.id);renderNotesSidebar();document.getElementById("note-title").focus();}
-function saveNote(){
-  const n=notes.find(n=>n.id===currentNoteId);if(!n)return;
-  n.title=document.getElementById("note-title").value;
-  n.content=document.getElementById("note-content").value;
+  currentNoteId = id;
+  const n = notes.find(n => n.id === id);
+  if (!n) return;
+  document.getElementById("empty-notes").style.display = "none";
+  document.getElementById("note-title").style.display = "block";
+  document.getElementById("note-content").style.display = "block";
+  document.getElementById("note-footer").style.display = "flex";
+  document.getElementById("note-title").value = n.title;
+  document.getElementById("note-content").value = n.content;
+
+  // Show/hide share button depending on other user existing
+  const shareBtn = document.getElementById("note-share-btn");
+  if (shareBtn) shareBtn.style.display = otherUser ? "flex" : "none";
+
+  // Show shared-from badge in footer if applicable
+  const badge = document.getElementById("note-shared-badge");
+  if (badge) {
+    badge.textContent = n.sharedFrom ? "Compartilhado por " + n.sharedFrom : "";
+    badge.style.display = n.sharedFrom ? "inline-block" : "none";
+  }
+
+  updateCharCount();
   renderNotesSidebar();
-  localStorage.setItem("tdahaha-notes-"+currentUser?.uid, JSON.stringify(notes));
-  alert("Ideia salva! 💡");
 }
-function deleteNote(){
-  if(!confirm("Apagar esta ideia?"))return;
-  notes=notes.filter(n=>n.id!==currentNoteId);currentNoteId=null;
-  document.getElementById("empty-notes").style.display="flex";
-  ["note-title","note-content"].forEach(id=>document.getElementById(id).style.display="none");
-  document.getElementById("note-footer").style.display="none";
+
+function newNote(){
+  const n = { id: Date.now(), title:"", content:"", date: formatDate(new Date()), ownerUid: currentUser.uid };
+  notes.unshift(n);
+  openNote(n.id);
   renderNotesSidebar();
-  localStorage.setItem("tdahaha-notes-"+currentUser?.uid, JSON.stringify(notes));
+  document.getElementById("note-title").focus();
 }
-function updateNotePreview(){updateCharCount();}
-function updateCharCount(){const c=(document.getElementById("note-content").value||"").length;document.getElementById("char-count").textContent=c+" caractere"+(c!==1?"s":"");}
-window.openNote=openNote;window.newNote=newNote;window.saveNote=saveNote;window.deleteNote=deleteNote;window.updateNotePreview=updateNotePreview;
+
+async function saveNote(){
+  const n = notes.find(n => n.id === currentNoteId);
+  if (!n) return;
+  n.title   = document.getElementById("note-title").value;
+  n.content = document.getElementById("note-content").value;
+
+  const noteData = {
+    ownerUid:  currentUser.uid,
+    title:     n.title,
+    content:   n.content,
+    date:      n.date,
+    sharedFrom: n.sharedFrom || null,
+  };
+
+  if (n.firestoreId) {
+    // Update existing
+    const { updateDoc: _upd } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await _upd(doc(db,"notes",n.firestoreId), noteData);
+  } else {
+    // Create new
+    noteData.createdAt = serverTimestamp();
+    const ref = await addDoc(collection(db,"notes"), noteData);
+    n.firestoreId = ref.id;
+  }
+
+  renderNotesSidebar();
+  showToast("Ideia salva! 💡");
+}
+
+async function deleteNote(){
+  if (!confirm("Apagar esta ideia?")) return;
+  const n = notes.find(n => n.id === currentNoteId);
+  if (n?.firestoreId) {
+    const { deleteDoc: _del } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await _del(doc(db,"notes", n.firestoreId));
+  }
+  notes = notes.filter(n => n.id !== currentNoteId);
+  currentNoteId = null;
+  document.getElementById("empty-notes").style.display = "flex";
+  ["note-title","note-content"].forEach(id => document.getElementById(id).style.display = "none");
+  document.getElementById("note-footer").style.display = "none";
+  const badge = document.getElementById("note-shared-badge");
+  if (badge) badge.style.display = "none";
+  renderNotesSidebar();
+}
+
+async function shareCurrentNote(){
+  if (!otherUser) return;
+  const n = notes.find(n => n.id === currentNoteId);
+  if (!n) return;
+
+  const btn = document.getElementById("note-share-btn");
+  if (btn) { btn.disabled = true; btn.style.opacity = "0.5"; }
+
+  try {
+    await addDoc(collection(db,"note-invites"),{
+      fromUid:      currentUser.uid,
+      fromUsername: currentUser.username,
+      toUid:        otherUser.uid,
+      status:       "pending",
+      note: {
+        title:   n.title   || "Sem título",
+        content: n.content || "",
+        date:    n.date,
+      },
+      createdAt: serverTimestamp()
+    });
+    showToast("📤 Ideia enviada para " + otherUser.username + "!");
+  } catch(err) {
+    console.error("shareNote error:", err);
+    showToast("Erro ao compartilhar.");
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = ""; }
+  }
+}
+window.shareCurrentNote = shareCurrentNote;
+
+// Check for pending note invites on startup
+async function checkNoteInvites() {
+  const q = query(
+    collection(db,"note-invites"),
+    where("toUid",  "==", currentUser.uid),
+    where("status", "==", "pending")
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return;
+
+  snap.forEach(async d => {
+    const inv = { ...d.data(), id: d.id };
+    // Auto-accept: add to user's notes
+    const noteData = {
+      ownerUid:   currentUser.uid,
+      title:      inv.note.title,
+      content:    inv.note.content,
+      date:       inv.note.date || formatDate(new Date()),
+      sharedFrom: inv.fromUsername,
+      createdAt:  serverTimestamp()
+    };
+    const ref = await addDoc(collection(db,"notes"), noteData);
+    notes.unshift({ ...noteData, id: Date.now(), firestoreId: ref.id });
+
+    // Mark invite as accepted
+    const { updateDoc: _upd } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await _upd(doc(db,"note-invites", inv.id), { status: "accepted" });
+  });
+
+  renderNotesSidebar();
+  showToast("💡 " + snap.size + " ideia(s) compartilhada(s) recebida(s)!");
+}
+
+function updateNotePreview(){ updateCharCount(); }
+function updateCharCount(){
+  const c = (document.getElementById("note-content").value||"").length;
+  document.getElementById("char-count").textContent = c + " caractere" + (c!==1?"s":"");
+}
+window.openNote=openNote; window.newNote=newNote; window.saveNote=saveNote;
+window.deleteNote=deleteNote; window.updateNotePreview=updateNotePreview;
 
 // ===== INIT LOCAL MODULES =====
 function initLocalModules(){
@@ -865,10 +1007,7 @@ function initLocalModules(){
   reminders = savedRem ? JSON.parse(savedRem) : [];
   renderReminders(); // scheduleReminderAlerts() is called inside renderReminders
 
-  const savedNotes = localStorage.getItem("tdahaha-notes-"+uid);
-  notes = savedNotes ? JSON.parse(savedNotes) : [];
-  renderNotesSidebar();
-  if(notes.length>0) openNote(notes[0].id);
+  // Notes loaded from Firestore (see loadNotes called in startApp)
   restoreCalState();
 }
 

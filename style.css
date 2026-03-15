@@ -112,7 +112,24 @@ body {
   min-height: 100vh;
   transition: background 0.3s, color 0.3s;
 }
-.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── Centering wrapper inside pages ── */
+.page-inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
+}
 
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -123,13 +140,22 @@ body {
 .nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
+  justify-content: center;
+  padding: 0;
   height: 58px;
   background: var(--card);
   border-bottom: 2px solid var(--border);
   flex-shrink: 0;
   transition: background 0.3s, border-color 0.3s;
+}
+
+.nav-inner {
+  width: 100%;
+  max-width: 1280px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
 }
 .nav-logo { font-family: 'Fredoka One', sans-serif; font-size: 22px; color: var(--c5); letter-spacing: 1px; }
 .nav-logo span { color: var(--c1); }
@@ -159,14 +185,21 @@ body.dark .theme-toggle { color: var(--c2); border-color: var(--c2); }
 body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-color: var(--c2); }
 
 /* ===== PAGES ===== */
-.page { display: none; flex: 1; overflow: hidden; }
+.page { display: none; flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
 .page.active { display: flex; }
 
 /* ===== MAIN GRID ===== */
 .main-grid {
   display: grid;
   grid-template-columns: 260px 1fr 260px;
-  gap: 14px; padding: 14px; width: 100%; overflow: hidden;
+  gap: 14px;
+  padding: 14px 20px;  /* match nav-inner horizontal padding */
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  overflow: hidden;
+  flex: 1;             /* fill all space between nav and footer */
+  min-height: 0;       /* allow shrink inside flex parent */
 }
 .left-col, .right-col { display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
 
@@ -434,7 +467,18 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
 .stat-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* ===== NOTES PAGE ===== */
-.notes-page { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; }
+.notes-page {
+  flex: 1;
+  padding: 14px 20px;  /* match nav-inner horizontal padding */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  min-height: 0;
+}
 .notes-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .notes-page-title { font-family: 'Fredoka One', sans-serif; font-size: 20px; color: var(--c3); }
 .notes-body { display: flex; gap: 12px; flex: 1; overflow: hidden; }
@@ -1119,4 +1163,92 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
     text-align: center;
     width: 80vw;
   }
+}
+
+/* ===== FOOTER ===== */
+.app-footer {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.app-footer span {
+  color: var(--c5);
+}
+
+/* ===== MOBILE FOOTER ===== */
+@media (max-width: 768px) {
+  .app-footer {
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+
+  /* main-grid scrollable area should not include footer */
+  .main-grid {
+    height: calc(100vh - 52px - 33px);
+  }
+}
+
+/* ── NAV INNER mobile ── */
+@media (max-width: 768px) {
+  .nav-inner { padding: 0 12px; width: 100%; }
+  .notes-page { max-width: 100%; }
+}
+
+/* ===== NOTE SHARE & SHARED TAGS ===== */
+.note-footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.note-shared-badge {
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--c2);
+  color: #2D2B55;
+  border-radius: 5px;
+  padding: 2px 7px;
+  display: inline-block;
+}
+
+.note-share-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 2px solid var(--cal-border);
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 6px 10px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.note-share-btn:hover {
+  border-color: var(--c5);
+  color: var(--c5);
+  background: var(--hover-bg);
+}
+
+/* Shared-from tag in sidebar */
+.note-shared-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--c2);
+  color: #2D2B55;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-right: 4px;
+  vertical-align: middle;
 }
