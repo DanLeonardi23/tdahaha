@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Perfis de usuário — qualquer um pode ler (necessário para encontrar o outro usuário)
+    // Apenas o próprio usuário pode escrever no próprio perfil
+    match /users/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Eventos do calendário
+    match /events/{eventId} {
+      allow read, write: if request.auth != null
+        && (resource == null || resource.data.ownerUid == request.auth.uid)
+        && request.resource.data.ownerUid == request.auth.uid;
+      // Leitura também para eventos recebidos (compartilhados)
+      allow read: if request.auth != null;
+    }
+
+    // Tarefas
+    match /tasks/{taskId} {
+      allow read, write: if request.auth != null
+        && (resource == null || resource.data.ownerUid == request.auth.uid)
+        && (request.resource == null || request.resource.data.ownerUid == request.auth.uid);
+      allow read: if request.auth != null;
+    }
+
+    // Lembretes
+    match /reminders/{remId} {
+      allow read, write: if request.auth != null
+        && (resource == null || resource.data.ownerUid == request.auth.uid)
+        && (request.resource == null || request.resource.data.ownerUid == request.auth.uid);
+      allow read: if request.auth != null;
+    }
+
+    // Notas
+    match /notes/{noteId} {
+      allow read, write: if request.auth != null
+        && (resource == null || resource.data.ownerUid == request.auth.uid)
+        && (request.resource == null || request.resource.data.ownerUid == request.auth.uid);
+      allow read: if request.auth != null;
+    }
+
+    // Convites de eventos — remetente cria, destinatário lê e atualiza status
+    match /invites/{inviteId} {
+      allow create: if request.auth != null
+        && request.resource.data.fromUid == request.auth.uid;
+      allow read, update: if request.auth != null
+        && (resource.data.fromUid == request.auth.uid
+         || resource.data.toUid   == request.auth.uid);
+    }
+
+    // Convites de notas
+    match /note-invites/{inviteId} {
+      allow create: if request.auth != null
+        && request.resource.data.fromUid == request.auth.uid;
+      allow read, update: if request.auth != null
+        && (resource.data.fromUid == request.auth.uid
+         || resource.data.toUid   == request.auth.uid);
+    }
+
+    // XP / gamificação — apenas o próprio usuário
+    match /xp/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}

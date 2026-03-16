@@ -4,6 +4,10 @@ import {
   getFirestore, doc, getDoc, setDoc, collection,
   query, where, getDocs, addDoc, updateDoc, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCrE8C3sWDB0DWaVnI2sZeTnhVrcFqtBCk",
@@ -16,6 +20,7 @@ const firebaseConfig = {
 
 const fbApp = initializeApp(firebaseConfig);
 const db    = getFirestore(fbApp);
+const auth  = getAuth(fbApp);
 
 // ===== STATE =====
 let currentUser = null;   // { uid, username }
@@ -52,9 +57,10 @@ window.showLogin    = showLogin;
 window.showRegister = showRegister;
 
 // Simple hash (not crypto-safe, but functional for this scope)
-async function hashPassword(pw) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pw));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+// ===== AUTH (Firebase Authentication) =====
+// Email used internally: username@tdahaha.app (user never sees it)
+function toEmail(username) {
+  return username.trim().toLowerCase() + "@tdahaha.app";
 }
 
 async function doLogin() {
@@ -65,41 +71,63 @@ async function doLogin() {
 
   if (!username || !password) { errEl.textContent = "Preencha todos os campos."; return; }
 
-  const hash = await hashPassword(password);
-  const userRef = doc(db, "users", username);
-  const snap = await getDoc(userRef);
+  // Show loading state
+  const btn = document.querySelector("#login-screen .login-btn");
+  btn.textContent = "Entrando..."; btn.disabled = true;
 
-  if (!snap.exists()) { errEl.textContent = "Usuário não encontrado."; return; }
-  if (snap.data().passwordHash !== hash) { errEl.textContent = "Senha incorreta."; return; }
-
-  currentUser = { uid: username, username: snap.data().displayName || username };
-  localStorage.setItem("tdahaha-session", username);
-  await startApp();
+  try {
+    await signInWithEmailAndPassword(auth, toEmail(username), password);
+    // onAuthStateChanged will handle the rest
+  } catch(err) {
+    btn.textContent = "Entrar"; btn.disabled = false;
+    if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential")
+      errEl.textContent = "Usuário não encontrado.";
+    else if (err.code === "auth/wrong-password")
+      errEl.textContent = "Senha incorreta.";
+    else if (err.code === "auth/invalid-email")
+      errEl.textContent = "Nome de usuário inválido.";
+    else
+      errEl.textContent = "Erro ao entrar. Tente novamente.";
+  }
 }
 window.doLogin = doLogin;
 
 async function doRegister() {
-  const username = document.getElementById("reg-username").value.trim().toLowerCase();
-  const password = document.getElementById("reg-password").value;
-  const password2= document.getElementById("reg-password2").value;
-  const errEl    = document.getElementById("reg-error");
+  const username  = document.getElementById("reg-username").value.trim().toLowerCase();
+  const password  = document.getElementById("reg-password").value;
+  const password2 = document.getElementById("reg-password2").value;
+  const errEl     = document.getElementById("reg-error");
   errEl.textContent = "";
 
   if (!username || !password) { errEl.textContent = "Preencha todos os campos."; return; }
   if (username.length < 3)    { errEl.textContent = "Nome deve ter pelo menos 3 caracteres."; return; }
   if (password.length < 4)    { errEl.textContent = "Senha deve ter pelo menos 4 caracteres."; return; }
   if (password !== password2) { errEl.textContent = "As senhas não coincidem."; return; }
+  if (!/^[a-z0-9_]+$/.test(username)) {
+    errEl.textContent = "Use apenas letras, números e _"; return;
+  }
 
-  const userRef = doc(db, "users", username);
-  const snap = await getDoc(userRef);
-  if (snap.exists()) { errEl.textContent = "Este nome já está em uso."; return; }
+  const btn = document.querySelector("#register-screen .login-btn");
+  btn.textContent = "Criando..."; btn.disabled = true;
 
-  const hash = await hashPassword(password);
-  await setDoc(userRef, { passwordHash: hash, displayName: username, createdAt: serverTimestamp() });
-
-  currentUser = { uid: username, username };
-  localStorage.setItem("tdahaha-session", username);
-  await startApp();
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, toEmail(username), password);
+    // Save display name in Firestore
+    await setDoc(doc(db, "users", cred.user.uid), {
+      username,
+      displayName: username,
+      createdAt: serverTimestamp()
+    });
+    // onAuthStateChanged will handle startApp
+  } catch(err) {
+    btn.textContent = "Criar conta"; btn.disabled = false;
+    if (err.code === "auth/email-already-in-use")
+      errEl.textContent = "Este nome já está em uso.";
+    else if (err.code === "auth/weak-password")
+      errEl.textContent = "Senha muito fraca.";
+    else
+      errEl.textContent = "Erro ao criar conta. Tente novamente.";
+  }
 }
 window.doRegister = doRegister;
 
@@ -149,14 +177,9 @@ function resetAppState() {
 }
 
 async function doLogout() {
-  localStorage.removeItem("tdahaha-session");
   resetAppState();
-  document.getElementById("main-app").style.display = "none";
-  document.getElementById("login-screen").style.display = "flex";
-  // Clear login fields
-  document.getElementById("login-username").value = "";
-  document.getElementById("login-password").value = "";
-  document.getElementById("login-error").textContent = "";
+  await signOut(auth);
+  // onAuthStateChanged will show login screen
 }
 window.doLogout = doLogout;
 
@@ -209,7 +232,7 @@ async function loadOtherUser() {
   const usersSnap = await getDocs(collection(db, "users"));
   usersSnap.forEach(d => {
     if (d.id !== currentUser.uid) {
-      otherUser = { uid: d.id, username: d.data().displayName || d.id };
+      otherUser = { uid: d.id, username: d.data().username || d.data().displayName || d.id };
     }
   });
   if (otherUser) {
@@ -1508,12 +1531,30 @@ function showLevelUpToast(levelName, icon) {
 
 // ===== END XP SYSTEM =====
 
-// ===== AUTO-LOGIN =====
-(async function autoLogin(){
-  const saved = localStorage.getItem("tdahaha-session");
-  if(!saved) return;
-  const snap = await getDoc(doc(db,"users",saved));
-  if(!snap.exists()){ localStorage.removeItem("tdahaha-session"); return; }
-  currentUser = { uid: saved, username: snap.data().displayName || saved };
-  await startApp();
-})();
+// ===== AUTH STATE LISTENER =====
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    // Logged in — load profile from Firestore
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const username = snap.exists()
+      ? (snap.data().username || snap.data().displayName || user.email.split("@")[0])
+      : user.email.split("@")[0];
+    currentUser = { uid: user.uid, username };
+
+    // Reset login button states
+    document.querySelectorAll(".login-btn").forEach(b => {
+      b.disabled = false;
+      b.textContent = b.closest("#register-screen") ? "Criar conta" : "Entrar";
+    });
+
+    await startApp();
+  } else {
+    // Logged out — show login screen
+    resetAppState();
+    document.getElementById("main-app").style.display = "none";
+    document.getElementById("login-screen").style.display = "flex";
+    document.getElementById("login-username").value = "";
+    document.getElementById("login-password").value = "";
+    document.getElementById("login-error").textContent = "";
+  }
+});
