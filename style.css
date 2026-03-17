@@ -570,12 +570,13 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
 .cal-notify-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  padding: 4px 2px;
+  padding: 4px 6px;
   border-radius: 8px;
   transition: background 0.15s;
   user-select: none;
+  white-space: nowrap;
 }
 .cal-notify-row:hover { background: var(--cal-hover); }
 
@@ -800,7 +801,13 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
 }
 
 /* ===== CALENDAR SHARE ROW ===== */
-.cal-options-row { display: flex; flex-direction: column; gap: 4px; }
+.cal-options-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 4px;
+}
 
 /* ===== INVITE OVERLAY ===== */
 #invite-overlay {
@@ -1205,7 +1212,7 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   .cal-event-time       { width: 100%; padding: 9px 10px; }
   .cal-event-input      { padding: 9px 10px; font-size: 14px; }
   .cal-event-obs        { font-size: 13px; }
-  .cal-options-row      { gap: 6px; margin-top: 4px; }
+  .cal-options-row      { flex-direction: column; gap: 4px; margin-top: 4px; }
   .cal-notify-row       { padding: 6px 4px; gap: 10px; }
   .cal-notify-label     { font-size: 13px; }
   .cal-event-btn-full   { padding: 12px 20px; font-size: 15px; margin-top: 12px; }
@@ -1596,3 +1603,19 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
 .levelup-name  { font-family: 'Fredoka One', sans-serif; font-size: 20px; line-height: 1.1; }
 
 /* ===== XP CARD MOBILE ===== */
+
+/* ===== CONFIRM MODAL DISMISS (recurring) ===== */
+.confirm-modal-dismiss {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.confirm-modal-dismiss:hover { color: var(--text); }

@@ -250,6 +250,10 @@ async function loadCalEvents() {
     const ev = { ...d.data(), firestoreId: d.id };
     if (!calEvents[ev.dateKey]) calEvents[ev.dateKey] = [];
     calEvents[ev.dateKey].push(ev);
+    // Inject recurring instances into future months
+    if (ev.recurring && ev.dayOfMonth) {
+      injectRecurringEvent(ev);
+    }
   });
   renderCalendar();
 }
@@ -758,8 +762,9 @@ function renderCalEvents(){
   evs.forEach((e, i) => {
     const div = document.createElement("div");
     div.className = "cal-event-item rel-" + e.relevance;
-    const bellIcon  = e.notify ? "🔔 " : "";
-    const sharedTag = e.sharedFrom
+    const bellIcon   = e.notify ? "🔔 " : "";
+    const recurIcon  = e.recurring ? "🔁 " : "";
+    const sharedTag  = e.sharedFrom
       ? `<span class="ev-shared-tag">de ${e.sharedFrom}</span> ` : "";
     const timeHtml  = e.time ? `<div class="cal-event-time-tag">⏰ ${e.time}</div>` : "";
     const obsHtml   = e.obs  ? `<div class="cal-event-obs-text">${e.obs}</div>`  : "";
@@ -777,7 +782,7 @@ function renderCalEvents(){
 
     div.innerHTML =
       `<div class="cal-event-body">` +
-        `<div class="cal-event-name">${bellIcon}${sharedTag}${e.text}</div>` +
+        `<div class="cal-event-name">${bellIcon}${recurIcon}${sharedTag}${e.text}</div>` +
         timeHtml + obsHtml +
       `</div>` +
       `<div class="cal-event-actions">` +
@@ -842,10 +847,36 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-async function deleteCalEvent(key,idx){
-  const ev=calEvents[key][idx];
-  if(ev.firestoreId) await deleteEventFromFirestore(ev.firestoreId);
-  calEvents[key].splice(idx,1);
+async function deleteCalEvent(key, idx){
+  const ev = calEvents[key][idx];
+
+  if(ev.recurring){
+    // Ask: delete just this month or all future recurrences?
+    const deleteAll = await showConfirmModal(
+      "Evento recorrente",
+      "Remover apenas este mês ou todas as ocorrências futuras?"
+    , "Apenas este mês", "Todas as ocorrências");
+
+    if(deleteAll === null) return; // cancelled
+
+    if(deleteAll){
+      // Remove from all future months in cache + delete master from Firestore
+      const day = ev.dayOfMonth;
+      const text = ev.text;
+      Object.keys(calEvents).forEach(k => {
+        calEvents[k] = calEvents[k].filter(e => !(e.recurring && e.text === text && e.dayOfMonth === day));
+      });
+      if(ev.firestoreId) await deleteEventFromFirestore(ev.firestoreId);
+    } else {
+      // Remove only this month's instance from cache (it's a virtual copy — no Firestore doc)
+      calEvents[key].splice(idx, 1);
+      if(ev.firestoreId) await deleteEventFromFirestore(ev.firestoreId);
+    }
+  } else {
+    if(ev.firestoreId) await deleteEventFromFirestore(ev.firestoreId);
+    calEvents[key].splice(idx, 1);
+  }
+
   renderCalendar();
 }
 window.deleteCalEvent=deleteCalEvent;
@@ -853,11 +884,12 @@ window.deleteCalEvent=deleteCalEvent;
 async function addCalEvent(){
   const text=document.getElementById("cal-event-input").value.trim();
   if(!text)return;
-  const time=document.getElementById("cal-event-time").value;
-  const obs=document.getElementById("cal-event-obs").value.trim();
-  const notify=document.getElementById("cal-notify-check").checked;
-  const share=document.getElementById("cal-share-check").checked;
-  const y=calDate.getFullYear(),m=calDate.getMonth()+1;
+  const time      = document.getElementById("cal-event-time").value;
+  const obs       = document.getElementById("cal-event-obs").value.trim();
+  const notify    = document.getElementById("cal-notify-check").checked;
+  const share     = document.getElementById("cal-share-check").checked;
+  const recurring = document.getElementById("cal-recur-check").checked;
+  const y=calDate.getFullYear(), m=calDate.getMonth()+1;
   const key=y+"-"+m+"-"+selectedDay;
 
   const evData={
@@ -866,15 +898,22 @@ async function addCalEvent(){
     text, time, obs,
     relevance:  currentRelevance,
     notify,
+    recurring,
+    dayOfMonth: recurring ? selectedDay : null,
     createdAt:  serverTimestamp()
   };
 
   const firestoreId = await saveEventToFirestore(evData);
-  const localEv = { text, time, obs, relevance: currentRelevance, notify, firestoreId, dateKey: key };
+  const localEv = { text, time, obs, relevance: currentRelevance, notify, recurring, dayOfMonth: recurring ? selectedDay : null, firestoreId, dateKey: key };
 
   if(!calEvents[key]) calEvents[key]=[];
   calEvents[key].push(localEv);
   addXp("event_created");
+
+  // If recurring, pre-populate next 12 months in local cache
+  if(recurring){
+    injectRecurringEvent(localEv);
+  }
 
   // Send invite if share checked and other user exists
   if(share && otherUser){
@@ -884,7 +923,7 @@ async function addCalEvent(){
       toUid:        otherUser.uid,
       type:         "new",
       status:       "pending",
-      event:        { text, time, obs, relevance: currentRelevance, notify, dateKey: key },
+      event:        { text, time, obs, relevance: currentRelevance, notify, recurring, dayOfMonth: recurring ? selectedDay : null, dateKey: key },
       createdAt:    serverTimestamp()
     });
   }
@@ -894,9 +933,34 @@ async function addCalEvent(){
   document.getElementById("cal-event-obs").value="";
   document.getElementById("cal-notify-check").checked=false;
   document.getElementById("cal-share-check").checked=false;
+  document.getElementById("cal-recur-check").checked=false;
   renderCalendar();
 }
 window.addCalEvent=addCalEvent;
+
+// Inject a recurring event into future months of local cache (display only)
+function injectRecurringEvent(ev) {
+  const baseParts = ev.dateKey.split("-");
+  const baseYear  = parseInt(baseParts[0]);
+  const baseMonth = parseInt(baseParts[1]);
+  const day       = ev.dayOfMonth;
+
+  // Inject into next 24 months
+  for(let i = 1; i <= 24; i++){
+    let y = baseYear, m = baseMonth + i;
+    while(m > 12){ m -= 12; y++; }
+    // Check day is valid for this month
+    const daysInMonth = new Date(y, m, 0).getDate();
+    if(day > daysInMonth) continue;
+    const futureKey = y+"-"+m+"-"+day;
+    if(!calEvents[futureKey]) calEvents[futureKey] = [];
+    // Avoid duplicate injections
+    const alreadyThere = calEvents[futureKey].some(e => e.text === ev.text && e.recurring);
+    if(!alreadyThere){
+      calEvents[futureKey].push({ ...ev, dateKey: futureKey, firestoreId: null, isRecurringInstance: true });
+    }
+  }
+}
 
 // ===== EVENT DAY-BEFORE ALERTS =====
 function getTomorrowKey(){
@@ -1222,40 +1286,49 @@ async function saveNote(){
   showToast("Ideia salva! 💡");
 }
 
-function showConfirmModal(title, subtitle) {
+function showConfirmModal(title, subtitle, cancelLabel, okLabel) {
   return new Promise(resolve => {
-    // Remove any existing modal
     const existing = document.getElementById("confirm-modal");
     if (existing) existing.remove();
+
+    const isRecurring  = okLabel !== undefined; // two-choice modal
+    const cancelText   = cancelLabel || "Cancelar";
+    const okText       = okLabel     || "Apagar";
+    const icon         = isRecurring ? "🔁" : "🗑️";
 
     const modal = document.createElement("div");
     modal.id = "confirm-modal";
     modal.className = "confirm-modal-overlay";
     modal.innerHTML =
       `<div class="confirm-modal-box">
-         <div class="confirm-modal-icon">🗑️</div>
+         <div class="confirm-modal-icon">${icon}</div>
          <div class="confirm-modal-title">${title}</div>
          ${subtitle ? `<div class="confirm-modal-sub">${subtitle}</div>` : ""}
          <div class="confirm-modal-actions">
-           <button class="confirm-modal-cancel">Cancelar</button>
-           <button class="confirm-modal-ok">Apagar</button>
+           <button class="confirm-modal-cancel">${cancelText}</button>
+           <button class="confirm-modal-ok">${okText}</button>
          </div>
+         ${isRecurring ? `<div class="confirm-modal-actions" style="margin-top:0;">
+           <button class="confirm-modal-dismiss">Cancelar</button>
+         </div>` : ""}
        </div>`;
 
     document.body.appendChild(modal);
     requestAnimationFrame(() => modal.classList.add("visible"));
 
     modal.querySelector(".confirm-modal-cancel").addEventListener("click", () => {
-      modal.remove();
-      resolve(false);
+      modal.remove(); resolve(isRecurring ? false : false);
     });
     modal.querySelector(".confirm-modal-ok").addEventListener("click", () => {
-      modal.remove();
-      resolve(true);
+      modal.remove(); resolve(true);
     });
-    // Click outside to cancel
+    if(isRecurring){
+      modal.querySelector(".confirm-modal-dismiss").addEventListener("click", () => {
+        modal.remove(); resolve(null); // cancelled entirely
+      });
+    }
     modal.addEventListener("click", e => {
-      if (e.target === modal) { modal.remove(); resolve(false); }
+      if (e.target === modal) { modal.remove(); resolve(null); }
     });
   });
 }
