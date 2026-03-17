@@ -409,6 +409,7 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   border: 2px solid var(--cal-border); border-radius: 8px; padding: 7px 6px;
   font-family: 'Nunito', sans-serif; font-size: 12px; color: var(--text);
   outline: none; width: 88px; flex-shrink: 0; background: var(--input-bg);
+  -webkit-appearance: none; appearance: none;
 }
 .cal-event-time:focus { border-color: var(--c5); }
 
@@ -1088,8 +1089,13 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
    ============================================================ */
 @media (max-width: 768px) {
 
-  /* ── APP SHELL ── */
-  .app { height: 100%; min-height: 100dvh; }
+  /* ── APP SHELL — fixed height so flex children can stretch ── */
+  .app {
+    height: 100dvh;
+    height: 100vh;         /* fallback for older browsers */
+    min-height: unset;
+    overflow: hidden;
+  }
 
   /* ── LOGO ACIMA DO NAV ── */
   .nav {
@@ -1134,7 +1140,7 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   }
 
   /* ── PAGES ── */
-  .page { overflow: hidden; }
+  .page { overflow: hidden; flex: 1; min-height: 0; }
   .page.active { display: flex; flex-direction: column; }
 
   /* ── MAIN GRID → coluna única rolável ── */
@@ -1209,7 +1215,7 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
   .cal-event-area { padding-top: 12px; margin-top: 12px; max-height: none; }
   .cal-add-block  { gap: 8px; }
   .cal-title-time-row   { flex-direction: column; gap: 8px; }
-  .cal-event-time       { width: 100%; padding: 9px 10px; }
+  .cal-event-time       { width: 100%; padding: 10px 12px; font-size: 16px; min-height: 44px; }
   .cal-event-input      { padding: 9px 10px; font-size: 14px; }
   .cal-event-obs        { font-size: 13px; }
   .cal-options-row      { flex-direction: column; gap: 4px; margin-top: 4px; }
@@ -1249,21 +1255,33 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
     gap: 12px;
     flex: 1;
     max-width: 100%;
-    overflow: hidden;
+    min-height: 0;
+    overflow: hidden;   /* clip horizontal, children handle vertical */
+    display: flex;
+    flex-direction: column;
+    height: 100%;       /* fill the page */
   }
   .notes-header     { margin-bottom: 4px; flex-shrink: 0; }
-  .notes-body       { flex-direction: column; gap: 12px; flex: 1; overflow: hidden; }
+  .notes-body       { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow: hidden; }
   .notes-sidebar {
-    width: 100%; flex-shrink: 0;
-    display: flex; flex-direction: row;
-    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
-    max-height: 110px; gap: 10px; padding-bottom: 6px;
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 100px;
+    max-height: 100px;
+    gap: 10px;
+    padding-bottom: 4px;
+    align-items: flex-start;
   }
-  .note-card-mini     { min-width: 150px; flex-shrink: 0; padding: 10px 12px; }
-  .note-editor        { flex: 1; min-height: 0; padding: 14px; }
+  .note-card-mini     { min-width: 150px; max-width: 180px; flex-shrink: 0; padding: 10px 12px; height: 90px; overflow: hidden; }
+  .note-editor        { flex: 1; min-height: 0; padding: 14px; overflow: hidden; display: flex; flex-direction: column; }
   .note-title-input   { font-size: 20px; padding-bottom: 10px; }
-  .note-content-input { font-size: 14px; }
-  .note-footer        { padding-top: 10px; flex-wrap: wrap; gap: 8px; }
+  .note-content-input { font-size: 14px; flex: 1; }
+  .note-footer        { padding-top: 10px; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
   .note-actions       { gap: 8px; }
   .note-save-btn,
   .note-del-btn       { padding: 9px 16px; font-size: 13px; }
