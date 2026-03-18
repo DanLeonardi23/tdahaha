@@ -1,0 +1,7 @@
+# Dependências das Cloud Functions
+functions/node_modules/
+
+# Dependências gerais
+node_modules/
+
+functions/node_modules/

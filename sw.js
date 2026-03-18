@@ -1,21 +1,8 @@
-// Service Worker — TDAHAHA
-self.addEventListener('install', e => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+// ===== TDAHAHA! Service Worker =====
+self.addEventListener('install',  () => self.skipWaiting());
+self.addEventListener('activate', e  => e.waitUntil(clients.claim()));
 
-self.addEventListener('push', e => {
-  const data = e.data ? e.data.json() : {};
-  e.waitUntil(
-    self.registration.showNotification(data.title || 'TDAHAHA', {
-      body:  data.body  || '',
-      icon:  '/icon-192.png',
-      badge: '/icon-192.png',
-      tag:   data.tag   || 'tdahaha',
-      renotify: true,
-    })
-  );
-});
-
-// Handle notification click — focus the app window
+// Show notification (called from app via registration.showNotification)
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(

@@ -1256,10 +1256,9 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
     flex: 1;
     max-width: 100%;
     min-height: 0;
-    overflow: hidden;   /* clip horizontal, children handle vertical */
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 100%;       /* fill the page */
   }
   .notes-header     { margin-bottom: 4px; flex-shrink: 0; }
   .notes-body       { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow: hidden; }
@@ -1270,14 +1269,14 @@ body.dark .theme-toggle:hover { background: var(--c2); color: #232332; border-co
     flex-direction: row;
     flex-wrap: nowrap;
     overflow-x: auto;
-    overflow-y: hidden;
-    height: 100px;
-    max-height: 100px;
+    overflow-y: visible;
+    min-height: 100px;
+    height: auto;
     gap: 10px;
-    padding-bottom: 4px;
-    align-items: flex-start;
+    padding-bottom: 6px;
+    align-items: stretch;
   }
-  .note-card-mini     { min-width: 150px; max-width: 180px; flex-shrink: 0; padding: 10px 12px; height: 90px; overflow: hidden; }
+  .note-card-mini     { min-width: 150px; max-width: 200px; flex-shrink: 0; padding: 10px 12px; min-height: 80px; height: auto; overflow: hidden; }
   .note-editor        { flex: 1; min-height: 0; padding: 14px; overflow: hidden; display: flex; flex-direction: column; }
   .note-title-input   { font-size: 20px; padding-bottom: 10px; }
   .note-content-input { font-size: 14px; flex: 1; }

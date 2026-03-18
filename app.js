@@ -23,8 +23,9 @@ const db    = getFirestore(fbApp);
 const auth  = getAuth(fbApp);
 
 // ===== STATE =====
-let currentUser = null;   // { uid, username }
-let otherUser   = null;   // { uid, username } — the other registered user
+let currentUser  = null;   // { uid, username }
+let otherUser    = null;   // { uid, username } — the other registered user
+let isLoggingOut = false;  // blocks auto-login during logout
 let calEvents   = {};     // local cache: key -> [events]
 let unsubInvites = null;  // Firestore listener
 
@@ -177,9 +178,18 @@ function resetAppState() {
 }
 
 async function doLogout() {
+  isLoggingOut = true;
   resetAppState();
+
+  // Show login screen immediately — don't wait for onAuthStateChanged
+  document.getElementById("main-app").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("login-username").value = "";
+  document.getElementById("login-password").value = "";
+  document.getElementById("login-error").textContent = "";
+
   await signOut(auth);
-  // onAuthStateChanged will show login screen
+  isLoggingOut = false;
 }
 window.doLogout = doLogout;
 
@@ -439,6 +449,18 @@ function showPage(page, btn) {
   document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
   document.getElementById("page-" + page).classList.add("active");
   btn.classList.add("active");
+
+  // Re-render notes when switching to notes page
+  // Fixes mobile issue where sidebar renders while page is hidden
+  if (page === "notes") {
+    renderNotesSidebar();
+    if (notes.length > 0 && !currentNoteId) {
+      openNote(notes[0].id);
+    } else if (currentNoteId) {
+      // Re-open current note to refresh editor state
+      openNote(currentNoteId);
+    }
+  }
 }
 window.showPage = showPage;
 
@@ -1084,7 +1106,6 @@ let scheduledTimers = {}; // reminderId -> timeoutId
 async function requestNotificationPermission() {
   if (!("Notification" in window)) return false;
 
-  // Register service worker
   if ("serviceWorker" in navigator) {
     try {
       await navigator.serviceWorker.register("/sw.js");
@@ -1606,7 +1627,13 @@ function showLevelUpToast(levelName, icon) {
 
 // ===== AUTH STATE LISTENER =====
 onAuthStateChanged(auth, async (user) => {
+  // Ignore auth events while manually logging out
+  if (isLoggingOut) return;
+
   if (user) {
+    // Already showing app for this user — skip
+    if (currentUser && currentUser.uid === user.uid) return;
+
     // Logged in — load profile from Firestore
     const snap = await getDoc(doc(db, "users", user.uid));
     const username = snap.exists()
