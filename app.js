@@ -1,3 +1,7 @@
+
+
+
+
 // ===== FIREBASE =====
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -451,15 +455,23 @@ function showPage(page, btn) {
   btn.classList.add("active");
 
   // Re-render notes when switching to notes page
-  // Fixes mobile issue where sidebar renders while page is hidden
   if (page === "notes") {
-    renderNotesSidebar();
-    if (notes.length > 0 && !currentNoteId) {
-      openNote(notes[0].id);
-    } else if (currentNoteId) {
-      // Re-open current note to refresh editor state
-      openNote(currentNoteId);
-    }
+    // Small delay ensures the page is visible before rendering
+    setTimeout(() => {
+      renderNotesSidebar();
+      if (notes.length > 0) {
+        openNote(currentNoteId || notes[0].id);
+      } else {
+        // No notes — show empty state
+        document.getElementById("empty-notes").style.display = "flex";
+        const title = document.getElementById("note-title");
+        const content = document.getElementById("note-content");
+        const footer = document.getElementById("note-footer");
+        if (title)   title.style.display   = "none";
+        if (content) content.style.display = "none";
+        if (footer)  footer.style.display  = "none";
+      }
+    }, 50);
   }
 }
 window.showPage = showPage;
@@ -1104,7 +1116,8 @@ window.deleteReminder=deleteReminder;window.addReminder=addReminder;
 let scheduledTimers = {}; // reminderId -> timeoutId
 
 async function requestNotificationPermission() {
-  if (!("Notification" in window)) return false;
+  // Safari blocks Notification API unless app is installed as PWA
+  if (typeof Notification === "undefined" || !("Notification" in window)) return false;
 
   if ("serviceWorker" in navigator) {
     try {
@@ -1114,10 +1127,15 @@ async function requestNotificationPermission() {
     }
   }
 
-  if (Notification.permission === "granted") return true;
-  if (Notification.permission === "denied") return false;
-  const result = await Notification.requestPermission();
-  return result === "granted";
+  try {
+    if (Notification.permission === "granted") return true;
+    if (Notification.permission === "denied") return false;
+    const result = await Notification.requestPermission();
+    return result === "granted";
+  } catch(err) {
+    console.warn("[Notification] not supported:", err);
+    return false;
+  }
 }
 
 // Called whenever reminders change — schedules a timeout for each future reminder
@@ -1126,7 +1144,7 @@ function scheduleReminderAlerts() {
   Object.values(scheduledTimers).forEach(t => clearTimeout(t));
   scheduledTimers = {};
 
-  if (Notification.permission !== "granted") return;
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
 
   const now = new Date();
 
@@ -1159,7 +1177,7 @@ function triggerReminderAlert(r) {
   showReminderBanner(r);
 
   // System notification via SW
-  if (Notification.permission === "granted") {
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     const body = r.time ? r.time + " — " + r.text : r.text;
     navigator.serviceWorker.ready.then(reg => {
       reg.showNotification("⏰ Lembrete — TDAHAHA", {
@@ -1219,7 +1237,6 @@ async function loadNotes() {
   const q = query(collection(db,"notes"), where("ownerUid","==",currentUser.uid));
   const snap = await getDocs(q);
   snap.forEach(d => notes.push({ ...d.data(), firestoreId: d.id, id: d.id }));
-  // Sort by createdAt desc
   notes.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
   renderNotesSidebar();
   if (notes.length > 0) openNote(notes[0].id);
