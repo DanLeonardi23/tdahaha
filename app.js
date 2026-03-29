@@ -6,7 +6,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, collection,
-  query, where, getDocs, addDoc, updateDoc, onSnapshot, serverTimestamp
+  query, where, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
@@ -278,7 +278,6 @@ async function saveEventToFirestore(ev) {
 }
 
 async function deleteEventFromFirestore(firestoreId) {
-  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
   await deleteDoc(doc(db, "events", firestoreId));
 }
 
@@ -671,8 +670,7 @@ function toggleTask(id) {
 function deleteTask(id) {
   const t = tasks.find(t => t.id === id);
   if (t?.firestoreId) {
-    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
-      .then(({deleteDoc:_d}) => _d(doc(db,"tasks",t.firestoreId))).catch(console.error);
+    deleteDoc(doc(db,"tasks",t.firestoreId)).catch(console.error);
   }
   tasks = tasks.filter(t => t.id !== id);
   renderTasks();
@@ -695,8 +693,7 @@ function clearDoneTasks() {
   const toDelete = tasks.filter(t => t.done && t.dateKey === dateKey);
   toDelete.forEach(t => {
     if (t.firestoreId) {
-      import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
-        .then(({deleteDoc:_d}) => _d(doc(db,"tasks",t.firestoreId))).catch(console.error);
+      deleteDoc(doc(db,"tasks",t.firestoreId)).catch(console.error);
     }
   });
   tasks = tasks.filter(t => !(t.done && t.dateKey === dateKey));
@@ -750,6 +747,7 @@ function renderCalendar(){
 
 function selectDay(d){
   selectedDay=d;
+  if(editingEvent) cancelEdit();
   renderCalendar();
   renderTasks();
   renderReminders();
@@ -821,12 +819,19 @@ function renderCalEvents(){
       `</div>` +
       `<div class="cal-event-actions">` +
         shareBtn +
-        `<button class="cal-event-del">✕</button>` +
+        `<button class="cal-event-edit" title="Editar">✎</button>` +
+        `<button class="cal-event-del" title="Excluir">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+             <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+           </svg>
+         </button>` +
       `</div>`;
 
     if (otherUser) {
       div.querySelector(".cal-event-share").addEventListener("click", () => shareExistingEvent(e, key));
     }
+    div.querySelector(".cal-event-edit").addEventListener("click", () => startEditCalEvent(e, key, i));
     div.querySelector(".cal-event-del").addEventListener("click", () => deleteCalEvent(key, i));
     list.appendChild(div);
   });
@@ -882,42 +887,133 @@ function showToast(msg) {
 }
 
 async function deleteCalEvent(key, idx){
-  const ev = calEvents[key][idx];
+  // Snapshot event data before any async operation (idx may become stale)
+  const ev = { ...calEvents[key][idx] };
 
   if(ev.recurring){
-    // Ask: delete just this month or all future recurrences?
     const deleteAll = await showConfirmModal(
       "Evento recorrente",
-      "Remover apenas este mês ou todas as ocorrências futuras?"
-    , "Apenas este mês", "Todas as ocorrências");
-
-    if(deleteAll === null) return; // cancelled
+      "Remover apenas este mês ou todas as ocorrências futuras?",
+      "Apenas este mês", "Todas as ocorrências"
+    );
+    if(deleteAll === null) return;
 
     if(deleteAll){
-      // Remove from all future months in cache + delete master from Firestore
-      const day = ev.dayOfMonth;
-      const text = ev.text;
+      const { day, text } = { day: ev.dayOfMonth, text: ev.text };
       Object.keys(calEvents).forEach(k => {
-        calEvents[k] = calEvents[k].filter(e => !(e.recurring && e.text === text && e.dayOfMonth === day));
+        calEvents[k] = calEvents[k].filter(e =>
+          !(e.recurring && e.text === text && e.dayOfMonth === day)
+        );
       });
       if(ev.firestoreId) await deleteEventFromFirestore(ev.firestoreId);
     } else {
-      // Remove only this month's instance from cache (it's a virtual copy — no Firestore doc)
-      calEvents[key].splice(idx, 1);
-      if(ev.firestoreId) await deleteEventFromFirestore(ev.firestoreId);
+      // Remove this month only — find by firestoreId to avoid stale index
+      if(ev.firestoreId) {
+        calEvents[key] = calEvents[key].filter(e => e.firestoreId !== ev.firestoreId);
+        await deleteEventFromFirestore(ev.firestoreId);
+      } else {
+        calEvents[key] = calEvents[key].filter(e => e !== calEvents[key][idx]);
+      }
     }
   } else {
-    if(ev.firestoreId) await deleteEventFromFirestore(ev.firestoreId);
-    calEvents[key].splice(idx, 1);
+    // Non-recurring: delete immediately
+    if(ev.firestoreId) {
+      try {
+        await deleteEventFromFirestore(ev.firestoreId);
+      } catch(err) {
+        console.error("delete event error:", err);
+      }
+      calEvents[key] = calEvents[key].filter(e => e.firestoreId !== ev.firestoreId);
+    } else {
+      calEvents[key].splice(idx, 1);
+    }
   }
 
   renderCalendar();
 }
 window.deleteCalEvent=deleteCalEvent;
 
+// ===== EDIT CAL EVENT =====
+let editingEvent = null; // { ev, key, idx }
+
+function startEditCalEvent(ev, key, idx) {
+  // Store what we're editing
+  editingEvent = { ev, key, idx };
+
+  // Populate form fields with existing data
+  document.getElementById("cal-event-input").value  = ev.text  || "";
+  document.getElementById("cal-event-time").value   = ev.time  || "";
+  document.getElementById("cal-event-obs").value    = ev.obs   || "";
+  document.getElementById("cal-notify-check").checked = ev.notify  || false;
+  document.getElementById("cal-recur-check").checked  = ev.recurring || false;
+
+  // Set relevance
+  currentRelevance = ev.relevance || "green";
+  ["green","yellow","red"].forEach(r =>
+    document.getElementById("rel-" + r).classList.toggle("active", r === currentRelevance)
+  );
+
+  // Change add button to save edit mode
+  const addBtn = document.querySelector(".cal-event-btn-full");
+  addBtn.textContent = "✓ Salvar alterações";
+  addBtn.classList.add("editing");
+
+  // Scroll form into view
+  document.querySelector(".cal-add-block").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function cancelEdit() {
+  editingEvent = null;
+  document.getElementById("cal-event-input").value = "";
+  document.getElementById("cal-event-time").value  = "";
+  document.getElementById("cal-event-obs").value   = "";
+  document.getElementById("cal-notify-check").checked = false;
+  document.getElementById("cal-recur-check").checked  = false;
+  const addBtn = document.querySelector(".cal-event-btn-full");
+  addBtn.textContent = "+ Adicionar Evento";
+  addBtn.classList.remove("editing");
+}
+
+async function saveEditCalEvent(text) {
+  const { ev, key, idx } = editingEvent;
+  const time      = document.getElementById("cal-event-time").value;
+  const obs       = document.getElementById("cal-event-obs").value.trim();
+  const notify    = document.getElementById("cal-notify-check").checked;
+  const recurring = document.getElementById("cal-recur-check").checked;
+
+  // Update local cache
+  const updated = { ...ev, text, time, obs, notify, recurring,
+    dayOfMonth: recurring ? ev.dayOfMonth || selectedDay : null,
+    relevance: currentRelevance };
+
+  calEvents[key][idx] = updated;
+
+  // Update in Firestore
+  if (ev.firestoreId) {
+    try {
+      await updateDoc(doc(db,"events",ev.firestoreId), {
+        text, time, obs, notify, recurring,
+        relevance: currentRelevance,
+        dayOfMonth: recurring ? (ev.dayOfMonth || selectedDay) : null
+      });
+    } catch(err) {
+      console.error("saveEdit error:", err);
+    }
+  }
+
+  cancelEdit();
+  renderCalendar();
+}
+
 async function addCalEvent(){
   const text=document.getElementById("cal-event-input").value.trim();
   if(!text)return;
+
+  // If in edit mode, save changes instead of creating new
+  if (editingEvent) {
+    await saveEditCalEvent(text);
+    return;
+  }
   const time      = document.getElementById("cal-event-time").value;
   const obs       = document.getElementById("cal-event-obs").value.trim();
   const notify    = document.getElementById("cal-notify-check").checked;
@@ -1088,8 +1184,7 @@ async function loadReminders() {
 function deleteReminder(id) {
   const r = reminders.find(r => r.id === id);
   if (r?.firestoreId) {
-    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
-      .then(({deleteDoc:_d}) => _d(doc(db,"reminders",r.firestoreId))).catch(console.error);
+    deleteDoc(doc(db,"reminders",r.firestoreId)).catch(console.error);
   }
   reminders = reminders.filter(r => r.id !== id);
   renderReminders();
@@ -1309,8 +1404,7 @@ async function saveNote(){
 
   if (n.firestoreId) {
     // Update existing
-    const { updateDoc: _upd } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await _upd(doc(db,"notes",n.firestoreId), noteData);
+    await updateDoc(doc(db,"notes",n.firestoreId), noteData);
   } else {
     // Create new
     noteData.createdAt = serverTimestamp();
@@ -1379,8 +1473,7 @@ async function deleteNote(){
 
   if (n.firestoreId) {
     try {
-      const { deleteDoc: _del } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-      await _del(doc(db,"notes", n.firestoreId));
+      await deleteDoc(doc(db,"notes", n.firestoreId));
     } catch(err) {
       console.error("deleteNote Firestore error:", err);
       showToast("Erro ao apagar. Tente novamente.");
